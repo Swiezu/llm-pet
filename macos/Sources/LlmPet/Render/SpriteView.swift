@@ -45,7 +45,8 @@ struct SpriteView: View {
                     box(point.0 + point.2 * push, point.1 + point.3 * push + b, 0.5, 0.5, color.opacity(Double(pose.aura)))
                 }
             }
-            for (index, column) in (pose.narrow ? [2.0, 3.9, 6.1, 8.0] : [2.0, 4.0, 7.0, 9.0]).enumerated() {
+            let legColumns: [CGFloat] = pose.narrow ? [2.0, 3.9, 6.1, 8.0] : [2.0, 4.0, 7.0, 9.0]
+            for (index, column) in legColumns.enumerated() {
                 let length = pose.legLength - pose.legs[index]
                 box(column, 6 + b, 1, length, Style.coral)
                 box(column, 6 + b + length - 0.4, 1, 0.4, Style.shade)
@@ -161,7 +162,8 @@ struct SpriteView: View {
             case .line: box(left - 1.2, 0.55 + b, width + 2.4, 0.38, Style.band)
             case .head: box(left - 0.2, 0.55 + b, width + 0.4, 0.38, Style.band)
             }
-            for (index, column) in (pose.narrow ? [2.7, 6.7] : [3.0, 8.0]).enumerated() {
+            let eyeColumns: [CGFloat] = pose.narrow ? [2.7, 6.7] : [3.0, 8.0]
+            for (index, column) in eyeColumns.enumerated() {
                 let x = column + pose.look
                 let b = b + pose.lookY
                 switch pose.eyes {
