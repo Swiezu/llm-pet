@@ -1,6 +1,6 @@
-# llm-pet MCP server
+# @swiezu/llm-pet-mcp
 
-An MCP server (stdio) for LLMs. It talks to the app through [`../sdk/js`](../sdk/README.md), so `llm-pet.app` has to be running.
+An MCP server (stdio) that lets an LLM drive [llm-pet](https://github.com/Swiezu/llm-pet), a pixel Clawd on your macOS desktop. It talks to the app through [`@swiezu/llm-pet-sdk`](https://www.npmjs.com/package/@swiezu/llm-pet-sdk), so `llm-pet.app` has to be running.
 
 | tool | what it does |
 |---|---|
@@ -14,7 +14,16 @@ An MCP server (stdio) for LLMs. It talks to the app through [`../sdk/js`](../sdk
 
 Muting channels is only possible in the app settings, not through MCP.
 
+## Setup
 ```bash
-cd mcp && npm install && npm test
-claude mcp add llm-pet -- node "$PWD/server.mjs"
+claude mcp add llm-pet -- npx -y @swiezu/llm-pet-mcp
 ```
+Any other MCP client: command `npx`, arguments `-y @swiezu/llm-pet-mcp`.
+
+## From the repository
+```bash
+npm install && npm test
+claude mcp add llm-pet -- node "$PWD/mcp/server.mjs"
+```
+
+License: MIT.

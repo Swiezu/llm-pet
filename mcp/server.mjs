@@ -1,7 +1,9 @@
+#!/usr/bin/env node
+import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import * as pet from 'llm-pet-sdk';
+import * as pet from '@swiezu/llm-pet-sdk';
 import { z } from 'zod';
 
 const instructions = 'llm-pet is a pixel Clawd living on the user\'s macOS desktop. pet_say shows a short speech bubble (ideally under 120 characters, max 8 lines) on a chosen channel (bubble color) and can play an animation; pet_action plays an animation alone. Take animation and channel names from pet_actions and pet_channels. Muted channels do not show messages; only the user can mute them, in the app settings. Use it when the user asks, or when it is worth getting their attention (a long task finished, a decision is needed). Do not spam: at most one message per event.';
@@ -39,6 +41,6 @@ export function createServer(client = pet) {
   return server;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   await createServer().connect(new StdioServerTransport());
 }

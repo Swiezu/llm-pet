@@ -47,11 +47,36 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: JS SDK tests
-        working-directory: sdk/js
+      - name: Install
+        run: npm ci
+      - name: Tests
         run: npm test
-      - name: MCP tests
-        working-directory: mcp
+
+  npm:
+    name: Publish to npm
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, node]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Latest npm for trusted publishing
+        run: npm install -g npm@latest
+      - name: Version from tag
         run: |
-          npm ci
-          npm test
+          version="${GITHUB_REF_NAME#v}"
+          npm version "$version" --no-git-tag-version --workspaces
+          npm pkg set "dependencies.@swiezu/llm-pet-sdk=^$version" --workspace mcp
+          npm install --package-lock-only
+      - name: Install
+        run: npm ci
+      - name: Publish SDK
+        run: npm publish --workspace sdk/js --provenance --access public
+      - name: Publish MCP
+        run: npm publish --workspace mcp --provenance --access public

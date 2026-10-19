@@ -18,7 +18,7 @@ A channel is addressed by name (case insensitive) or `id`. There is no mute in t
 ## Clients
 | directory | usage |
 |---|---|
-| `js/` | `import { say, action, actions, channels, addChannel, removeChannel, status, show, hide } from 'llm-pet-sdk'`; `say('Build is green', { channel: 'Build', animation: 'party' })` (Node 22+, no dependencies, `"llm-pet-sdk": "file:<path>/sdk/js"`); tests: `npm test` |
+| `js/` | [`@swiezu/llm-pet-sdk`](https://www.npmjs.com/package/@swiezu/llm-pet-sdk): `npm install @swiezu/llm-pet-sdk`, then `import { say, action, actions, channels, addChannel, removeChannel, status, show, hide } from '@swiezu/llm-pet-sdk'`; `say('Build is green', { channel: 'Build', animation: 'party' })` (Node 22+, no dependencies); tests: `npm test` in the repository root |
 | `swift/` | Swift package `LlmPetKit`: `try await LlmPet().say("Build is green", channel: "Build", animation: "party")`, `.action("typing")`, `.actions()`, `.channels()`, `.addChannel("Build", color: "#3B4A6B")`, `.removeChannel("Build")`, `.status()`; local dependency `.package(path: "<path>/sdk/swift")` |
 | `shell/llm-pet` | `llm-pet say "text" -c Build -a party -s 5`, `llm-pet action typing`, `llm-pet actions`, `llm-pet channels`, `llm-pet channel-add Build "#3B4A6B"`, `llm-pet channel-remove Build`, `llm-pet status`, `llm-pet show`, `llm-pet hide` (curl and jq shipped with macOS) |
 

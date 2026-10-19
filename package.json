@@ -1,0 +1,8 @@
+{
+  "name": "llm-pet-workspace",
+  "private": true,
+  "workspaces": ["sdk/js", "mcp"],
+  "scripts": {
+    "test": "npm test --workspaces"
+  }
+}

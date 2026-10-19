@@ -1,19 +1,44 @@
 {
-  "name": "llm-pet-mcp",
+  "name": "@swiezu/llm-pet-mcp",
   "version": "0.1.0",
-  "description": "MCP server that lets an LLM send messages and animations to llm-pet",
+  "description": "MCP server that lets an LLM send speech bubbles and animations to the llm-pet macOS desktop pet",
   "type": "module",
+  "bin": {
+    "llm-pet-mcp": "server.mjs"
+  },
+  "files": [
+    "server.mjs",
+    "README.md"
+  ],
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
-    "llm-pet-sdk": "file:../sdk/js",
+    "@swiezu/llm-pet-sdk": "^0.1.0",
     "zod": "4.6.7"
   },
-  "private": true,
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "llm-pet",
+    "desktop-pet",
+    "macos",
+    "claude"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swiezu/llm-pet.git",
+    "directory": "mcp"
+  },
+  "homepage": "https://github.com/Swiezu/llm-pet#readme",
+  "bugs": "https://github.com/Swiezu/llm-pet/issues",
   "engines": {
     "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

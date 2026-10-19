@@ -1,14 +1,35 @@
 {
-  "name": "llm-pet-sdk",
+  "name": "@swiezu/llm-pet-sdk",
   "version": "0.1.0",
-  "description": "Client for the local llm-pet API (macOS)",
+  "description": "Client for the local llm-pet API: speech bubbles, animations and channels for the macOS desktop pet",
   "type": "module",
   "exports": "./index.mjs",
+  "files": [
+    "index.mjs",
+    "README.md"
+  ],
   "scripts": {
     "test": "node --test test.mjs"
   },
-  "private": true,
+  "keywords": [
+    "llm-pet",
+    "desktop-pet",
+    "macos",
+    "claude",
+    "llm"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swiezu/llm-pet.git",
+    "directory": "sdk/js"
+  },
+  "homepage": "https://github.com/Swiezu/llm-pet#readme",
+  "bugs": "https://github.com/Swiezu/llm-pet/issues",
   "engines": {
     "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

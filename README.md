@@ -9,6 +9,8 @@
   <a href="https://github.com/Swiezu/llm-pet/actions/workflows/ci.yml"><img src="https://github.com/Swiezu/llm-pet/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/macOS-26%2B-black" alt="macOS 26+">
   <img src="https://img.shields.io/badge/Swift-6.2-orange" alt="Swift 6.2">
+  <a href="https://www.npmjs.com/package/@swiezu/llm-pet-mcp"><img src="https://img.shields.io/npm/v/@swiezu/llm-pet-mcp?label=mcp" alt="npm mcp"></a>
+  <a href="https://www.npmjs.com/package/@swiezu/llm-pet-sdk"><img src="https://img.shields.io/npm/v/@swiezu/llm-pet-sdk?label=sdk" alt="npm sdk"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT"></a>
 </p>
 
@@ -70,8 +72,7 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 
 ### From an LLM (MCP)
 ```bash
-cd mcp && npm install
-claude mcp add llm-pet -- node "$PWD/server.mjs"
+claude mcp add llm-pet -- npx -y @swiezu/llm-pet-mcp
 ```
 Tools: `pet_say` (bubble, optional channel and animation), `pet_action`, `pet_actions`, `pet_channels`, `pet_add_channel`, `pet_remove_channel`, `pet_status`. Details in [`mcp/README.md`](mcp/README.md).
 
@@ -87,8 +88,11 @@ sdk/shell/llm-pet channel-add Build "#3B4A6B"
 import LlmPetKit
 try await LlmPet().say("Done!", channel: "Build", animation: "party")
 ```
+```bash
+npm install @swiezu/llm-pet-sdk
+```
 ```js
-import { say } from 'llm-pet-sdk'
+import { say } from '@swiezu/llm-pet-sdk'
 await say('Done!', { channel: 'Build', animation: 'party' })
 ```
 Full API and client reference: [`sdk/README.md`](sdk/README.md).
@@ -107,16 +111,17 @@ On launch the app writes its port and a one-time token to `~/Library/Application
 | directory | what |
 |---|---|
 | [`macos/`](macos/README.md) | the app (Swift package, AppKit + SwiftUI) |
-| [`sdk/`](sdk/README.md) | API reference and clients: JS, Swift (`LlmPetKit`), shell |
-| [`mcp/`](mcp/README.md) | MCP server (Node, stdio) |
+| [`sdk/`](sdk/README.md) | API reference and clients: JS ([`@swiezu/llm-pet-sdk`](https://www.npmjs.com/package/@swiezu/llm-pet-sdk)), Swift (`LlmPetKit`), shell |
+| [`mcp/`](mcp/README.md) | MCP server ([`@swiezu/llm-pet-mcp`](https://www.npmjs.com/package/@swiezu/llm-pet-mcp), Node, stdio) |
 | `docs/` | logo and animation GIFs for this README |
 
 ```bash
+npm install && npm test                            # JS SDK and MCP (npm workspaces)
 swift build --package-path macos
 macos/.build/debug/llm-pet --dump-frames frames   # frame sheets for every animation (PNG)
 macos/.build/debug/llm-pet --render-docs docs     # logo and GIFs for this README
 ```
-Adding an animation is described in [`macos/README.md`](macos/README.md#new-animation). CI (GitHub Actions) builds the app and the Swift SDK on macOS, runs the JS SDK and MCP tests, and publishes `llm-pet.zip` to Releases for `v*` tags.
+Adding an animation is described in [`macos/README.md`](macos/README.md#new-animation). CI (GitHub Actions) builds the app and the Swift SDK on macOS, runs the JS SDK and MCP tests, and for `v*` tags publishes `llm-pet.zip` to Releases and both npm packages (version taken from the tag, with provenance).
 
 ## License
 
