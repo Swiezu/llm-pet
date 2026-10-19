@@ -25,11 +25,11 @@ test('lists and calls tools', async () => {
   });
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map(t => t.name).sort(), ['pet_action', 'pet_actions', 'pet_add_channel', 'pet_channels', 'pet_remove_channel', 'pet_say', 'pet_status']);
-  await client.callTool({ name: 'pet_say', arguments: { text: 'hej', channel: 'Build', animation: 'party', seconds: 5 } });
+  await client.callTool({ name: 'pet_say', arguments: { text: 'hej', channel: 'Build', animation: 'party', seconds: 0, link: 'https://example.com' } });
   await client.callTool({ name: 'pet_action', arguments: { name: 'typing' } });
   await client.callTool({ name: 'pet_add_channel', arguments: { name: 'Build', color: '#3B4A6B' } });
   await client.callTool({ name: 'pet_remove_channel', arguments: { channel: 'Build' } });
-  assert.deepEqual(calls, [['say', 'hej', { channel: 'Build', animation: 'party', seconds: 5 }], ['action', 'typing'], ['add', 'Build', '#3B4A6B'], ['remove', 'Build']]);
+  assert.deepEqual(calls, [['say', 'hej', { channel: 'Build', animation: 'party', seconds: 0, link: 'https://example.com' }], ['action', 'typing'], ['add', 'Build', '#3B4A6B'], ['remove', 'Build']]);
   const bad = await client.callTool({ name: 'pet_add_channel', arguments: { name: 'x', color: 'red' } });
   assert.equal(bad.isError, true);
 });

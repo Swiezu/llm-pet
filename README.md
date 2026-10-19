@@ -35,11 +35,13 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 ## Features
 
 - **Speech bubbles with channels**: a main channel plus as many as you like, each with its own name and color; text types itself out, bubbles keep to the screen edges.
+- **Queue**: up to 2 bubbles stacked above the pet, the rest wait their turn and a "+n" badge shows how many.
+- **Duration and links**: a ring in the corner counts down until the bubble disappears, `seconds: 0` keeps it until you click X; an optional link (URL, deep link or file path) at the bottom right opens on click.
 - **Muting only from the app settings**, so neither an LLM nor another app can get around it.
 - **22 animations** triggered from the menu, the API, an SDK or MCP; clicking the pet plays a random trick.
 - **Drag and drop**: grab the pet and move it; on release it settles right where you left it.
 - **English and Polish** UI, chosen on first launch.
-- **Settings**: language, channels and frame rate (12-120 fps).
+- **Settings**: language, channels, pet size (50-200%, animated live), bubble text size and frame rate (12-120 fps).
 - **Local HTTP API** on `127.0.0.1` only, token protected, with JS, Swift and shell SDKs and an MCP server.
 - **DEBUG menu** to preview animations, texts and channel colors.
 
@@ -66,7 +68,7 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 | menu bar (paw) | what it does |
 |---|---|
 | Show / Hide pet | showing starts with the teleport |
-| Settings… (⌘,) | language, channels (name, color, mute, delete) and frame rate |
+| Settings… (⌘,) | language, channels (name, color, mute, delete), pet and bubble text size, frame rate |
 | DEBUG ANIMATION / TEXT / CHANNEL | preview animations, texts and channel colors |
 | Quit (⌘Q) | |
 
@@ -74,11 +76,12 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 ```bash
 claude mcp add llm-pet -- npx -y @swiezu/llm-pet-mcp
 ```
-Tools: `pet_say` (bubble, optional channel and animation), `pet_action`, `pet_actions`, `pet_channels`, `pet_add_channel`, `pet_remove_channel`, `pet_status`. Details in [`mcp/README.md`](mcp/README.md).
+Tools: `pet_say` (bubble, optional channel, animation, duration and link), `pet_action`, `pet_actions`, `pet_channels`, `pet_add_channel`, `pet_remove_channel`, `pet_status`. Details in [`mcp/README.md`](mcp/README.md).
 
 ### From the terminal and scripts
 ```bash
 sdk/shell/llm-pet say "Build is green" -c Build -a shipit
+sdk/shell/llm-pet say "Review needed" -s 0 -l https://github.com/Swiezu/llm-pet/pulls
 sdk/shell/llm-pet action deploy
 sdk/shell/llm-pet channel-add Build "#3B4A6B"
 ```

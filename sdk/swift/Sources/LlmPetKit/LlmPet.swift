@@ -9,6 +9,8 @@ public struct LlmPetStatus: Decodable, Sendable {
     public let enabled: Bool
     public let action: String
     public let speaking: Bool
+    public let bubbles: Int
+    public let queued: Int
     public let fps: Int
 }
 
@@ -45,11 +47,12 @@ public struct LlmPet: Sendable {
     }
 
     @discardableResult
-    public func say(_ text: String, channel: String? = nil, animation: String? = nil, seconds: Double? = nil) async throws -> Bool {
+    public func say(_ text: String, channel: String? = nil, animation: String? = nil, seconds: Double? = nil, link: String? = nil) async throws -> Bool {
         var body: [String: Any] = ["text": text]
         if let channel { body["channel"] = channel }
         if let animation { body["animation"] = animation }
         if let seconds { body["seconds"] = seconds }
+        if let link { body["link"] = link }
         let result = try JSONSerialization.jsonObject(with: try await send("POST", "/say", body)) as? [String: Any]
         return result?["shown"] as? Bool ?? false
     }

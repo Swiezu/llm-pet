@@ -14,6 +14,8 @@ struct PetView: View {
                 facing: pet.facing,
                 grounded: !pet.held && !pet.falling
             )
+            .scaleEffect(pet.scale, anchor: .bottom)
+            .frame(width: pet.frameSize.width, height: pet.frameSize.height, alignment: .bottom)
             .onTapGesture { pet.poke() }
             .gesture(DragGesture(minimumDistance: 3).onChanged { _ in pet.hold() }.onEnded { _ in pet.release() })
             .help(tr("Click for a trick, drag to move, hide it from the paw in the menu bar", "Klik = sztuczka, przeciągnij = przenieś, chowasz łapką w pasku menu"))

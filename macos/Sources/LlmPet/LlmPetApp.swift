@@ -31,6 +31,16 @@ private struct MenuContent: View {
             ForEach(DebugTexts.all(settings.lang), id: \.self) { text in
                 Button(DebugTexts.preview(text)) { pet.say(text) }
             }
+            Divider()
+            Button(tr("Until closed, with a link", "Do zamknięcia, z linkiem")) {
+                pet.say(DebugTexts.sticky(settings.lang), for: .infinity, link: URL(string: "https://github.com/Swiezu/llm-pet"))
+            }
+            Button(tr("10 s, with a folder link", "10 s, z linkiem do folderu")) {
+                pet.say(DebugTexts.timedLink(settings.lang), for: 10, link: FileManager.default.homeDirectoryForCurrentUser.appending(path: "Downloads"))
+            }
+            Button(tr("5 bubbles at once (queue)", "5 dymków naraz (kolejka)")) {
+                for index in 1...5 { pet.say(tr("Bubble \(index) of 5", "Dymek \(index) z 5"), for: 4) }
+            }
         }
         .disabled(!pet.enabled)
         Menu("DEBUG CHANNEL") {

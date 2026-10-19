@@ -8,19 +8,20 @@ A pixel Clawd (8×6 body, 1×1 eyes, 2×2 arms, 4 legs) in its own transparent w
 | Show / Hide pet | showing starts with the teleport and a greeting; state in `UserDefaults` (`petEnabled`) |
 | Settings… (⌘,) | settings window |
 | DEBUG ANIMATION | plays the chosen animation |
-| DEBUG TEXT | shows a text from the test pool (`Pet/DebugTexts.swift`) on the main channel |
+| DEBUG TEXT | shows a text from the test pool (`Pet/DebugTexts.swift`) on the main channel; at the bottom a bubble that stays until closed with a link, a 10 s bubble with a folder link and 5 bubbles at once (queue) |
 | DEBUG CHANNEL | a random test text on the chosen channel (checks color and muting) |
 | Quit (⌘Q) | |
 
 ## Settings
 - **Language**: English or Polish; asked once on first launch, changeable later. Applies to the menu, settings, animation titles, test texts and the greeting. The API, MCP and SDKs are always in English.
 - **Channels**: the main channel (cannot be deleted) and any number of others: name, bubble color (text color adapts to the background), mute, delete. Muting is only possible here; messages sent to a muted channel are not shown. Stored in `UserDefaults` (`channels`).
+- **Size**: pet size 50-200% (`petScale`; while the slider moves the pet springs to the new size, straining with raised paws and an aura when it grows, squeezing and sweating when it shrinks) and bubble text 10-22 pt (`bubbleFont`; visible bubbles adapt live, with no bubble on screen a sample one appears).
 - **Animation**: frames per second (12, 24, 30, 60, 120; default 30). Movement is time based, so the pet moves at the same speed at any frame rate.
 
 ## Behaviour
 On its own the pet just stands and blinks: no random actions, no random texts. Animations are triggered from the DEBUG menu, the API or a click (a random trick from `Action.tricks`). Drag it to move it (it dangles and flails); on release it settles gently a few points down (`Pet.drop`) and stays where you left it.
 
-Speech bubble (separate window, keeps to screen edges, flips below the head when there is no room above, follows hops): `Pet.shared.say("text", on: channel)`. Text types and erases itself, reading time depends on length, max 8 lines and 300 pt, longer text ends with "…", colors come from the channel.
+Speech bubble (separate window, keeps to screen edges, flips below the head when there is no room above, follows hops): `Pet.shared.say("text", on: channel)`. Text types and erases itself, reading time depends on length unless `for:` sets it (`.infinity` = until closed), max 8 lines and 300 pt, longer text ends with "…", colors come from the channel. Top right: a ring that empties over the reading time, or an X for a bubble without a time limit. `link:` adds a link at the bottom right (host, file name or scheme) that opens with `NSWorkspace` and closes the bubble. The bubble window lets clicks through unless it has an X or a link. `BubbleStack` keeps at most 2 bubbles on screen (the oldest nearest to the pet, with the tail; when it goes, the next one slides down), queues the rest (up to 20) and shows a "+n" badge on the outer bubble; an animation sent with a bubble plays when the bubble appears.
 
 | animation | what happens |
 |---|---|
@@ -72,7 +73,7 @@ Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir
 | `Pet/DocsRender.swift` | `--render-docs`: logo and animation GIFs for `docs/` |
 | `Settings/` | `AppSettings` (language, FPS, channels), `Language` (translations and first launch picker), `Channel` (color, mute), `SettingsView`, `SettingsWindow` |
 | `Server/` | `PetServer` (HTTP on loopback, Network.framework, token), `ServerInfo` (`server.json`) |
-| `Bubble/` | speech bubble: `Bubble` (text, colors, typing and erasing phases, window, position), `BubbleView` |
+| `Bubble/` | speech bubbles: `Bubble` (one bubble: text, colors, typing and erasing phases, countdown, link, window), `BubbleStack` (up to 2 on screen, queue, layout), `BubbleView` |
 | `Render/Pose.swift` | one frame: eyes, arms, props, offsets, scale, legs, scene items |
 | `Render/SpriteView.swift` | draws Clawd from a `Pose` (Canvas) |
 | `Render/PetView.swift` | `PetView` (frame clock from settings, gestures) and `PetFrame` (one frame: shadow, effects, sprite, portal mask, flying props) |

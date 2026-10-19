@@ -3,6 +3,14 @@ enum DebugTexts {
         language == .pl ? "Cześć! 👋" : "Hi! 👋"
     }
 
+    static func sticky(_ language: Language) -> String {
+        language == .pl ? "Ten dymek czeka, aż go zamkniesz. Link otwiera repo." : "This bubble waits until you close it. The link opens the repo."
+    }
+
+    static func timedLink(_ language: Language) -> String {
+        language == .pl ? "Raport gotowy, znika za 10 s." : "Report ready, gone in 10 s."
+    }
+
     static func all(_ language: Language) -> [String] {
         let pl = language == .pl
         return [

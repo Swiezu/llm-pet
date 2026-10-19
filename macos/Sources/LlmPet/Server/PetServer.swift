@@ -67,7 +67,7 @@ final class PetServer {
         let path = request.path.split(separator: "?").first.map(String.init) ?? request.path
         switch (request.method, path) {
         case ("GET", "/status"):
-            return .json(["enabled": pet.enabled, "action": pet.action.rawValue, "speaking": pet.bubble.text != nil, "fps": settings.fps])
+            return .json(["enabled": pet.enabled, "action": pet.action.rawValue, "speaking": pet.bubbles.speaking, "bubbles": pet.bubbles.active.count, "queued": pet.bubbles.queued, "fps": settings.fps])
         case ("GET", "/actions"):
             return .json(["actions": Action.allCases.map(Self.describe)])
         case ("GET", "/channels"):
@@ -92,11 +92,15 @@ final class PetServer {
                 guard let action = Action(rawValue: name) else { return Self.unknownAction }
                 animation = action
             }
+            var link: URL?
+            if let value = body["link"] as? String, !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                guard let url = Self.link(value) else { return .error(400, "link must be a URL with a scheme (https://, file://, myapp://) or an absolute path") }
+                link = url
+            }
             guard pet.enabled else { return .error(409, "pet is hidden") }
             guard !channel.muted else { return .json(["ok": true, "shown": false, "muted": true, "channel": channel.id]) }
-            pet.say(text, for: (body["seconds"] as? Double).map { min(60, max(1, $0)) }, on: channel)
-            if let animation { pet.perform(animation) }
-            return .json(["ok": true, "shown": true, "channel": channel.id])
+            guard let queued = pet.say(text, for: (body["seconds"] as? Double).map { $0 == 0 ? .infinity : min(3600, max(1, $0)) }, link: link, animation: animation, on: channel) else { return .error(429, "too many bubbles waiting (\(BubbleStack.maxQueue)), try again later") }
+            return .json(["ok": true, "shown": true, "queued": queued, "channel": channel.id])
         case ("POST", "/action"):
             guard let name = request.json?["name"] as? String, let action = Action(rawValue: name) else { return Self.unknownAction }
             guard pet.enabled else { return .error(409, "pet is hidden") }
@@ -112,6 +116,13 @@ final class PetServer {
 
     private static var unknownAction: Response {
         .error(400, "unknown animation, available: \(Action.allCases.map(\.rawValue).joined(separator: ", "))")
+    }
+
+    private static func link(_ value: String) -> URL? {
+        let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.hasPrefix("/") || value.hasPrefix("~") { return URL(fileURLWithPath: (value as NSString).expandingTildeInPath) }
+        guard let url = URL(string: value), let scheme = url.scheme, !scheme.isEmpty else { return nil }
+        return url
     }
 
     private static func describe(_ action: Action) -> [String: Any] {

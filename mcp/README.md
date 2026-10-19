@@ -4,7 +4,7 @@ An MCP server (stdio) that lets an LLM drive [llm-pet](https://github.com/Swiezu
 
 | tool | what it does |
 |---|---|
-| `pet_say` | speech bubble (`text` up to 600 characters), optional `channel`, `animation`, `seconds` |
+| `pet_say` | speech bubble (`text` up to 600 characters), optional `channel`, `animation`, `seconds` (1-3600, `0` = until the user closes it), `link` (URL or absolute path, opened on click) |
 | `pet_action` | animation only (`name`) |
 | `pet_actions` | list of animations |
 | `pet_channels` | list of channels (including mute state) |

@@ -35,7 +35,7 @@ export async function request(method, path, body, file = serverFile) {
 }
 
 export const status = () => request('GET', '/status');
-export const say = (text, { seconds, channel, animation } = {}) => request('POST', '/say', { text, seconds, channel, animation });
+export const say = (text, { seconds, channel, animation, link } = {}) => request('POST', '/say', { text, seconds, channel, animation, link });
 export const action = name => request('POST', '/action', { name });
 export const actions = async () => (await request('GET', '/actions')).actions;
 export const channels = async () => (await request('GET', '/channels')).channels;

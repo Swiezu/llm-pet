@@ -23,6 +23,27 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
             }
+            Section(tr("Size", "Rozmiar")) {
+                LabeledContent(tr("Pet size", "Rozmiar postaci")) {
+                    HStack {
+                        Slider(value: $settings.petScale, in: AppSettings.petScales, step: 0.05)
+                        Text("\(Int((settings.petScale * 100).rounded())) %")
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+                LabeledContent(tr("Bubble text", "Czcionka dymków")) {
+                    HStack {
+                        Slider(value: $settings.bubbleFont, in: AppSettings.bubbleFonts, step: 1)
+                        Text("\(Int(settings.bubbleFont)) pt")
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+                .onChange(of: settings.bubbleFont) {
+                    if !Pet.shared.bubbles.speaking { Pet.shared.say(tr("This is how bubbles look", "Tak wyglądają dymki"), for: 3) }
+                }
+            }
             Section(tr("Animation", "Animacja")) {
                 Picker(tr("Frames per second", "Klatki na sekundę"), selection: $settings.fps) {
                     ForEach(AppSettings.fpsOptions, id: \.self) { Text("\($0)").tag($0) }

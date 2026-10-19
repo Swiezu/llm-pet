@@ -39,6 +39,9 @@ extension Pose {
         } else if let landed = pet.landStart, now.timeIntervalSince(landed) < 0.3 {
             self.init()
             land(now.timeIntervalSince(landed))
+        } else if now < pet.resizeUntil {
+            self.init()
+            resize(growing: pet.growing, clock: clock)
         } else {
             self.init(action: pet.action, t: now.timeIntervalSince(pet.actionStart), clock: clock, walked: pet.walked)
         }

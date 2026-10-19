@@ -18,8 +18,11 @@ final class Pet {
     private(set) var held = false
     private(set) var falling = false
     private(set) var landStart: Date?
+    private(set) var scale = CGFloat(AppSettings.shared.petScale)
+    @ObservationIgnored private(set) var resizeUntil = Date.distantPast
+    @ObservationIgnored private(set) var growing = true
 
-    @ObservationIgnored let bubble = Bubble()
+    @ObservationIgnored let bubbles = BubbleStack()
     @ObservationIgnored private var window: NSPanel?
     @ObservationIgnored private var loop: Task<Void, Never>?
     @ObservationIgnored private var x: CGFloat = 170
@@ -31,6 +34,9 @@ final class Pet {
     @ObservationIgnored private var grab = CGPoint.zero
     @ObservationIgnored private var until = Date.distantFuture
     @ObservationIgnored private var lastTick = Date.now
+    @ObservationIgnored private var scaleSpeed: CGFloat = 0
+
+    var frameSize: CGSize { CGSize(width: Self.size.width * scale, height: Self.size.height * scale) }
 
     func restore() {
         if enabled { show() }
@@ -47,16 +53,15 @@ final class Pet {
     }
 
     @discardableResult
-    func say(_ message: String, for seconds: TimeInterval? = nil, on channel: Channel = AppSettings.shared.main) -> Bool {
-        guard enabled, !channel.muted else { return false }
-        bubble.say(message, for: seconds, background: channel.background, foreground: channel.foreground)
-        return true
+    func say(_ message: String, for seconds: TimeInterval? = nil, link: URL? = nil, animation: Action? = nil, on channel: Channel = AppSettings.shared.main) -> Int? {
+        guard enabled, !channel.muted else { return nil }
+        return bubbles.say(message, for: seconds, link: link, background: channel.background, foreground: channel.foreground, onShow: animation.map { action in { [weak self] in self?.perform(action) } })
     }
 
     func perform(_ next: Action) {
         guard enabled, !held, !falling else { return }
         if next == .walk, let screen = (window?.screen ?? NSScreen.main)?.visibleFrame {
-            target = .random(in: (screen.minX - Self.edge)...(screen.maxX - Self.size.width + Self.edge))
+            target = .random(in: (screen.minX - Self.edge * scale)...(screen.maxX - frameSize.width + Self.edge * scale))
         }
         if next == .teleport { facing = 1 }
         start(next)
@@ -83,13 +88,15 @@ final class Pet {
         held = false
         falling = true
         fall = 0
-        rest = (y ?? 0) - Self.drop
+        rest = (y ?? 0) - Self.drop * scale
         start(.idle)
     }
 
     private func show() {
         guard window == nil else { return }
-        let panel = NSPanel(contentRect: NSRect(origin: .zero, size: Self.size), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        scale = CGFloat(AppSettings.shared.petScale)
+        scaleSpeed = 0
+        let panel = NSPanel(contentRect: NSRect(origin: .zero, size: frameSize), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.level = .statusBar
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         panel.backgroundColor = .clear
@@ -113,7 +120,7 @@ final class Pet {
         loop = nil
         window?.orderOut(nil)
         window = nil
-        bubble.close()
+        bubbles.close()
     }
 
     private func start(_ next: Action) {
@@ -134,7 +141,8 @@ final class Pet {
         let k = CGFloat(min(0.1, max(0, now.timeIntervalSince(lastTick))) * 60)
         lastTick = now
         let floor = screen.minY
-        bubble.update(now)
+        resize(now, dt: k / 60)
+        bubbles.update(now)
         defer { placeBubble(screen, floor: floor, now: now) }
         if held {
             place(screen, floor: floor)
@@ -169,15 +177,38 @@ final class Pet {
     }
 
     private func place(_ screen: NSRect, floor: CGFloat) {
-        x = min(max(x, screen.minX - Self.edge), screen.maxX - Self.size.width + Self.edge)
-        y = min(max(y ?? floor, floor), screen.maxY - Self.size.height)
-        let origin = NSPoint(x: x.rounded(), y: (y ?? floor).rounded())
-        if let window, window.frame.origin != origin { window.setFrameOrigin(origin) }
+        let size = frameSize
+        x = min(max(x, screen.minX - Self.edge * scale), screen.maxX - size.width + Self.edge * scale)
+        y = min(max(y ?? floor, floor), screen.maxY - size.height)
+        let frame = NSRect(x: x.rounded(), y: (y ?? floor).rounded(), width: size.width.rounded(), height: size.height.rounded())
+        if let window, window.frame != frame { window.setFrame(frame, display: true) }
+    }
+
+    private func resize(_ now: Date, dt: CGFloat) {
+        let target = CGFloat(AppSettings.shared.petScale)
+        guard scale != target || scaleSpeed != 0 else { return }
+        if abs(target - scale) > 0.01 {
+            growing = target > scale
+            resizeUntil = now.addingTimeInterval(0.45)
+        }
+        var next = scale
+        let steps = max(1, Int((dt * 240).rounded(.up)))
+        let step = dt / CGFloat(steps)
+        for _ in 0..<steps {
+            scaleSpeed += ((target - next) * 170 - scaleSpeed * 11) * step
+            next += scaleSpeed * step
+        }
+        if abs(target - next) < 0.002, abs(scaleSpeed) < 0.02 {
+            next = target
+            scaleSpeed = 0
+        }
+        x -= Self.size.width * (next - scale) / 2
+        scale = next
     }
 
     private func placeBubble(_ screen: NSRect, floor: CGFloat, now: Date) {
         let bottom = y ?? floor
         let lift = action == .hop && !held && !falling ? Hop.lift(now.timeIntervalSince(actionStart)) : 0
-        bubble.place(on: screen, center: x + Self.size.width / 2, bottom: bottom, head: bottom + 58 + lift)
+        bubbles.place(on: screen, center: x + frameSize.width / 2, bottom: bottom, head: bottom + (58 + lift) * scale)
     }
 }

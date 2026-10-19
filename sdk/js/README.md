@@ -10,6 +10,7 @@ npm install @swiezu/llm-pet-sdk
 import { say, action, actions, channels, addChannel, removeChannel, status, show, hide } from '@swiezu/llm-pet-sdk'
 
 await say('Build is green', { channel: 'Build', animation: 'shipit' })
+await say('Review needed', { seconds: 0, link: 'https://github.com/Swiezu/llm-pet/pulls' })
 await action('deploy')
 console.log((await actions()).map(a => a.name))
 await addChannel('Build', '#3B4A6B')
