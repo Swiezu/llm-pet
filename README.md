@@ -121,7 +121,9 @@ swift build --package-path macos
 macos/.build/debug/llm-pet --dump-frames frames   # frame sheets for every animation (PNG)
 macos/.build/debug/llm-pet --render-docs docs     # logo and GIFs for this README
 ```
-Adding an animation is described in [`macos/README.md`](macos/README.md#new-animation). CI (GitHub Actions) builds the app and the Swift SDK on macOS, runs the JS SDK and MCP tests, and for `v*` tags publishes `llm-pet.zip` to Releases and both npm packages (version taken from the tag, with provenance).
+Adding an animation is described in [`macos/README.md`](macos/README.md#new-animation). CI (GitHub Actions) builds the app and the Swift SDK on macOS, runs the JS SDK and MCP tests, and after every green push to `main` tags a new version on its own, creates a GitHub release with `llm-pet.zip` and publishes both npm packages with provenance.
+
+Versions follow the commits since the last tag: `feat:` bumps the minor version, `!` or `BREAKING CHANGE` bumps the major version, anything else bumps the patch version; `[skip release]` in the commit message skips the release.
 
 ## License
 
