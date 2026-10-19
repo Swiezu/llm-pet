@@ -103,10 +103,13 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Publish to npm
         if: steps.version.outputs.next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          HAS_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
         run: |
           npm install -g npm@latest
           version="${{ steps.version.outputs.next }}"
-          npm version "$version" --no-git-tag-version --workspaces
+          npm version "$version" --no-git-tag-version --allow-same-version --workspaces
           npm pkg set "dependencies.@swiezu/llm-pet-sdk=^$version" --workspace mcp
           npm install --package-lock-only
           npm ci
@@ -114,9 +117,9 @@ jobs:
             name=$(node -p "require('./$workspace/package.json').name")
             if npm view "$name@$version" version > /dev/null 2>&1; then
               echo "$name@$version is already on npm"
-            elif npm view "$name" name > /dev/null 2>&1; then
+            elif [ "$HAS_TOKEN" = "true" ] || npm view "$name" name > /dev/null 2>&1; then
               npm publish --workspace "$workspace" --provenance --access public
             else
-              echo "::notice::$name is not on npm yet; publish the first version manually, then add a trusted publisher"
+              echo "::notice::$name is not on npm yet; add an NPM_TOKEN secret or publish the first version manually"
             fi
           done

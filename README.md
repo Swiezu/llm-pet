@@ -123,7 +123,7 @@ macos/.build/debug/llm-pet --render-docs docs     # logo and GIFs for this READM
 ```
 Adding an animation is described in [`macos/README.md`](macos/README.md#new-animation). CI (GitHub Actions) builds the app and the Swift SDK on macOS, runs the JS SDK and MCP tests, and after every green push to `main` tags a new version on its own, creates a GitHub release with `llm-pet.zip` and publishes both npm packages with provenance.
 
-Versions follow the commits since the last tag: `feat:` bumps the minor version, `!` or `BREAKING CHANGE` bumps the major version, anything else bumps the patch version; `[skip release]` in the commit message skips the release.
+Versions follow the commits since the last tag: `feat:` bumps the minor version, `!` or `BREAKING CHANGE` bumps the major version, anything else bumps the patch version; `[skip release]` in the commit message skips the release. npm publishing uses the `NPM_TOKEN` repository secret if it is set, or npm trusted publishing (OIDC) once it is configured for both packages.
 
 ## License
 
