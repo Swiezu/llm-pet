@@ -1,0 +1,8 @@
+build/
+macos/.build/
+macos/.swiftpm/
+sdk/swift/.build/
+sdk/swift/.swiftpm/
+node_modules/
+.DS_Store
+.idea/

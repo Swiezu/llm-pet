@@ -1,0 +1,14 @@
+{
+  "name": "llm-pet-sdk",
+  "version": "0.1.0",
+  "description": "Client for the local llm-pet API (macOS)",
+  "type": "module",
+  "exports": "./index.mjs",
+  "scripts": {
+    "test": "node --test test.mjs"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

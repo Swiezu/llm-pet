@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    name: macOS app and Swift SDK
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Build app
+        run: macos/build.sh
+      - name: Build Swift SDK
+        run: swift build --package-path sdk/swift
+      - name: Frame sheets
+        run: macos/.build/release/llm-pet --dump-frames frames
+      - name: Package
+        run: ditto -c -k --keepParent build/llm-pet.app llm-pet.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: llm-pet
+          path: llm-pet.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frames
+          path: frames
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" llm-pet.zip --title "$GITHUB_REF_NAME" --generate-notes
+
+  node:
+    name: JS SDK and MCP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: JS SDK tests
+        working-directory: sdk/js
+        run: npm test
+      - name: MCP tests
+        working-directory: mcp
+        run: |
+          npm ci
+          npm test

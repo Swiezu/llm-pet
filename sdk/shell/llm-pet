@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Sends commands to llm-pet through its local API (curl + jq shipped with macOS).
+# usage: llm-pet say "text" [-c channel] [-a animation] [-s seconds] | action <animation> | actions | channels | channel-add <name> [#RRGGBB] | channel-remove <channel> | status | show | hide
+set -euo pipefail
+file="$HOME/Library/Application Support/llm-pet/server.json"
+[ -f "$file" ] || { echo "llm-pet is not running (no server.json)" >&2; exit 1; }
+port=$(jq -r .port "$file")
+token=$(jq -r .token "$file")
+call() { curl -sS --max-time 3 -X "$1" -H "Authorization: Bearer $token" -H "Content-Type: application/json" ${3:+-d "$3"} "http://127.0.0.1:$port$2"; echo; }
+usage() { sed -n 3p "$0" >&2; exit 2; }
+command="${1:-}"
+[ $# -gt 0 ] && shift
+case "$command" in
+  say)
+    [ -n "${1:-}" ] || usage
+    text="$1"; shift
+    channel="" animation="" seconds=""
+    while getopts "c:a:s:" option; do
+      case "$option" in
+        c) channel="$OPTARG" ;;
+        a) animation="$OPTARG" ;;
+        s) seconds="$OPTARG" ;;
+        *) usage ;;
+      esac
+    done
+    call POST /say "$(jq -nc --arg text "$text" --arg channel "$channel" --arg animation "$animation" --arg seconds "$seconds" \
+      '{text: $text} + (if $channel == "" then {} else {channel: $channel} end) + (if $animation == "" then {} else {animation: $animation} end) + (if $seconds == "" then {} else {seconds: ($seconds | tonumber)} end)')" ;;
+  action) [ -n "${1:-}" ] || usage; call POST /action "$(jq -nc --arg name "$1" '{name: $name}')" ;;
+  actions) call GET /actions ;;
+  channels) call GET /channels ;;
+  channel-add) [ -n "${1:-}" ] || usage; call POST /channels "$(jq -nc --arg name "$1" --arg color "${2:-}" '{name: $name} + (if $color == "" then {} else {color: $color} end)')" ;;
+  channel-remove) [ -n "${1:-}" ] || usage; call DELETE "/channels/$(jq -rn --arg key "$1" '$key | @uri')" ;;
+  status) call GET /status ;;
+  show|hide) call POST "/$command" ;;
+  *) usage ;;
+esac

@@ -1,0 +1,19 @@
+{
+  "name": "llm-pet-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that lets an LLM send messages and animations to llm-pet",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "llm-pet-sdk": "file:../sdk/js",
+    "zod": "4.6.7"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}
