@@ -28,7 +28,7 @@ extension Pose {
                 let radius = 8 + 30 * p
                 for index in 0..<5 {
                     let angle = Double(index - 2) * 0.3
-                    for side in [-1.0, 1.0] {
+                    for side: Double in [-1, 1] {
                         dot("t", tip.x + CGFloat(side) * radius * CGFloat(cos(angle)), tip.y + radius * CGFloat(sin(angle)) * 0.6, opacity: Double(1 - p))
                     }
                 }

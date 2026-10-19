@@ -14,7 +14,7 @@ jobs:
     name: macOS app and Swift SDK
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Swift version
         run: swift --version
       - name: Build app
@@ -43,8 +43,8 @@ jobs:
     name: JS SDK and MCP
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: JS SDK tests

@@ -27,7 +27,8 @@ struct SpriteView: View {
             let middle = left + width / 2
             if pose.aura > 0 {
                 let frame = Int(clock / 0.06)
-                for (index, degrees) in [180.0, 207, 234, 261, 288, 315, 342, 0].enumerated() where (frame / 2 + index) % 3 != 0 {
+                let angles: [Double] = [180, 207, 234, 261, 288, 315, 342, 0]
+                for (index, degrees) in angles.enumerated() where (frame / 2 + index) % 3 != 0 {
                     let angle = degrees * .pi / 180
                     let start = 6.0 + 0.5 * CGFloat((frame + index) % 2)
                     for step in 0..<3 {
@@ -36,7 +37,8 @@ struct SpriteView: View {
                     }
                 }
                 let top: [CGFloat] = [left - 0.8, left + 1.8, middle - 0.25, right - 2.3, right + 0.3]
-                let ring = top.map { ($0, CGFloat(-1.2), CGFloat(0), CGFloat(-1)) } + [1, 3.2, 5.4].flatMap { y in [(left - 1.3, CGFloat(y), CGFloat(-1), CGFloat(0)), (right + 0.8, CGFloat(y), CGFloat(1), CGFloat(0))] }
+                let rows: [CGFloat] = [1, 3.2, 5.4]
+                let ring: [(CGFloat, CGFloat, CGFloat, CGFloat)] = top.map { ($0, CGFloat(-1.2), CGFloat(0), CGFloat(-1)) } + rows.flatMap { y in [(left - 1.3, CGFloat(y), CGFloat(-1), CGFloat(0)), (right + 0.8, CGFloat(y), CGFloat(1), CGFloat(0))] }
                 for (index, point) in ring.enumerated() where (frame + index * 7) % 3 != 0 {
                     let push = 0.35 * CGFloat((frame + index) % 2)
                     let color = (index + frame) % 2 == 0 ? Style.light : Style.ivory
@@ -171,7 +173,8 @@ struct SpriteView: View {
                     box(x - 0.05, 2.3 + b, 1.15, 1.0, .black.opacity(0.85))
                     box(x + 0.15, 2.5 + b, 0.75, 0.6, on ? Style.led : Style.led.opacity(0.4))
                 case .dizzy:
-                    for (dx, dy) in [(0.0, 2.35), (0.75, 2.35), (0.375, 2.75), (0.0, 3.15), (0.75, 3.15)] {
+                    let cross: [(CGFloat, CGFloat)] = [(0, 2.35), (0.75, 2.35), (0.375, 2.75), (0, 3.15), (0.75, 3.15)]
+                    for (dx, dy) in cross {
                         box(x + dx, dy + b, 0.32, 0.32, .black)
                     }
                 case .focused:
