@@ -19,6 +19,26 @@ enum DocsRender {
             }
             gif(frames, delay: 1 / fps, to: gifs.appending(path: "\(action.rawValue).gif"))
         }
+        resize(to: gifs.appending(path: "resize.gif"), fps: fps)
+    }
+
+    private static func resize(to url: URL, fps: Double) {
+        let steps: [(start: Double, from: CGFloat, to: CGFloat)] = [(0, 1, 1.4), (1.3, 1.4, 0.7), (2.6, 0.7, 1)]
+        let frames = (0..<Int(3.9 * fps)).compactMap { index -> CGImage? in
+            let t = Double(index) / fps
+            let step = steps.last { $0.start <= t } ?? steps[0]
+            let local = t - step.start
+            let scale = step.to + (step.from - step.to) * CGFloat(exp(-5.5 * local) * cos(11.8 * local))
+            var pose = Pose()
+            if local < 0.75 { pose.resize(growing: step.to > step.from, clock: 1000 + t) }
+            let frame = PetFrame(pose: pose, action: .idle, t: t, clock: 1000 + t, facing: 1, grounded: true)
+                .scaleEffect(scale, anchor: .bottom)
+                .frame(width: Pet.size.width, height: Pet.size.height)
+                .clipped()
+                .background(background)
+            return image(frame, scale: 1)
+        }
+        gif(frames, delay: 1 / fps, to: url)
     }
 
     private static func logo(to url: URL) {

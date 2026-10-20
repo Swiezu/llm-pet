@@ -60,18 +60,18 @@ macos/build.sh --open   # same, then relaunch the app
 ```
 Bundle id: `pl.frostbyte.llm-pet`. Requires macOS 26+ and Swift 6.2+ (Command Line Tools or Xcode). `.build/` and `.app` are not tracked.
 
-Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir>` writes `<name>.png` with 18 timed frames for every animation (`Pet/FrameDump.swift`); `--render-docs <dir>` writes the logo and the GIFs used in the main README (`Pet/DocsRender.swift`).
+Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir>` writes `<name>.png` with 18 timed frames for every animation (`Pet/FrameDump.swift`); `--render-docs <dir>` writes the logo and the GIFs used in the main README (also `resize.gif`) (`Pet/DocsRender.swift`).
 
 ## Code (`macos/Sources/LlmPet/`)
 | directory / file | what |
 |---|---|
 | `LlmPetApp.swift` | app entry, menu bar menu with the DEBUG items, first launch language choice |
-| `Pet/Pet.swift` | pet state, window, movement loop (walk, drop, drag), teleport on show |
+| `Pet/Pet.swift` | pet state, window, movement loop (walk, drop, drag), teleport on show, spring scaling to the size from the settings |
 | `Pet/Action.swift` | animations: API name, localized title, duration, click tricks |
 | `Pet/DebugTexts.swift` | test texts and the greeting (English and Polish) |
 | `Pet/FrameDump.swift` | `--dump-frames`: animation frame sheets as PNG |
 | `Pet/DocsRender.swift` | `--render-docs`: logo and animation GIFs for `docs/` |
-| `Settings/` | `AppSettings` (language, FPS, channels), `Language` (translations and first launch picker), `Channel` (color, mute), `SettingsView`, `SettingsWindow` |
+| `Settings/` | `AppSettings` (language, FPS, channels, pet size, bubble text size), `Language` (translations and first launch picker), `Channel` (color, mute), `SettingsView`, `SettingsWindow` |
 | `Server/` | `PetServer` (HTTP on loopback, Network.framework, token), `ServerInfo` (`server.json`) |
 | `Bubble/` | speech bubbles: `Bubble` (one bubble: text, colors, typing and erasing phases, countdown, link, window), `BubbleStack` (up to 2 on screen, queue, layout), `BubbleView` |
 | `Render/Pose.swift` | one frame: eyes, arms, props, offsets, scale, legs, scene items |
@@ -83,6 +83,7 @@ Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir
 | `Animations/Choreography.swift` | picks the pose for the pet state and action |
 | `Animations/Stage.swift` | scene props (`Pose.items`): placement relative to the pet, context bar, easing |
 | `Animations/<Action>.swift` | one animation = one file with a `mutating func` on `Pose` |
+| `Animations/Resize.swift` | pose while the pet changes size (not an API action): straining when it grows, squeezing when it shrinks |
 
 ## New animation
 1. A `case` in `Pet/Action.swift` with `title` (English and Polish) and `duration` (optionally in `tricks`); it shows up in the DEBUG ANIMATION menu and the API automatically.
