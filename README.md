@@ -6,7 +6,7 @@
 
 <p align="center">
   A pixel Clawd that lives on your macOS desktop and tells you what your LLM is up to.<br><br>
-  <a href="https://github.com/Swiezu/llm-pet/actions/workflows/ci.yml"><img src="https://github.com/Swiezu/llm-pet/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/Swiezu/llm-pet/actions/workflows/ci.yml"><img src="https://github.com/Swiezu/llm-pet/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
   <img src="https://img.shields.io/badge/macOS-26%2B-black" alt="macOS 26+">
   <img src="https://img.shields.io/badge/Swift-6.2-orange" alt="Swift 6.2">
   <a href="https://github.com/Swiezu/llm-pet/releases/latest"><img src="https://img.shields.io/github/v/release/Swiezu/llm-pet" alt="release"></a>
