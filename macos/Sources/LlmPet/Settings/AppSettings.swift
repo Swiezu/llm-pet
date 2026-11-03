@@ -7,6 +7,8 @@ final class AppSettings {
     static let shared = AppSettings()
     static let fpsOptions = [12, 24, 30, 60, 120]
     static let bubbleFonts: ClosedRange<Double> = 10...22
+    static let bubbleWidths: ClosedRange<Double> = 160...800
+    static let bubbleHeights: ClosedRange<Int> = 2...30
     static let petScales: ClosedRange<Double> = 0.5...2
     private static let palette = ["#FFD9A8", "#B8E1FF", "#C9F2C7", "#F7C6E0", "#E2D4FF", "#FFF3A8", "#3B4A6B", "#7A2E3A"]
 
@@ -16,6 +18,14 @@ final class AppSettings {
 
     var bubbleFont: Double {
         didSet { UserDefaults.standard.set(bubbleFont, forKey: "bubbleFont") }
+    }
+
+    var bubbleWidth: Double {
+        didSet { UserDefaults.standard.set(bubbleWidth, forKey: "bubbleWidth") }
+    }
+
+    var bubbleLines: Int {
+        didSet { UserDefaults.standard.set(bubbleLines, forKey: "bubbleLines") }
     }
 
     var petScale: Double {
@@ -39,6 +49,10 @@ final class AppSettings {
         self.fps = Self.fpsOptions.contains(fps) ? fps : 30
         let font = UserDefaults.standard.double(forKey: "bubbleFont")
         bubbleFont = Self.bubbleFonts.contains(font) ? font : 13
+        let width = UserDefaults.standard.double(forKey: "bubbleWidth")
+        bubbleWidth = Self.bubbleWidths.contains(width) ? width : 300
+        let lines = UserDefaults.standard.integer(forKey: "bubbleLines")
+        bubbleLines = Self.bubbleHeights.contains(lines) ? lines : 8
         let scale = UserDefaults.standard.double(forKey: "petScale")
         petScale = Self.petScales.contains(scale) ? scale : 1
         language = UserDefaults.standard.string(forKey: "language").flatMap(Language.init)

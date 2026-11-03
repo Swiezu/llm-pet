@@ -23,7 +23,7 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
             }
-            Section(tr("Size", "Rozmiar")) {
+            Section {
                 LabeledContent(tr("Pet size", "Rozmiar postaci")) {
                     HStack {
                         Slider(value: $settings.petScale, in: AppSettings.petScales, step: 0.05)
@@ -43,6 +43,29 @@ struct SettingsView: View {
                 .onChange(of: settings.bubbleFont) {
                     if !Pet.shared.bubbles.speaking { Pet.shared.say(tr("This is how bubbles look", "Tak wyglądają dymki"), for: 3) }
                 }
+                LabeledContent(tr("Bubble width", "Szerokość dymku")) {
+                    HStack {
+                        Slider(value: $settings.bubbleWidth, in: AppSettings.bubbleWidths, step: 10)
+                        Text("\(Int(settings.bubbleWidth)) pt")
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+                LabeledContent(tr("Bubble height", "Wysokość dymku")) {
+                    HStack {
+                        Slider(value: Binding(get: { Double(settings.bubbleLines) }, set: { settings.bubbleLines = Int($0.rounded()) }), in: Double(AppSettings.bubbleHeights.lowerBound)...Double(AppSettings.bubbleHeights.upperBound), step: 1)
+                        Text(tr("\(settings.bubbleLines) ln", "\(settings.bubbleLines) l."))
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+                .onChange(of: settings.bubbleWidth) { preview() }
+                .onChange(of: settings.bubbleLines) { preview() }
+            } header: {
+                Text(tr("Size", "Rozmiar"))
+            } footer: {
+                Text(tr("Width and height of a collapsed bubble. Longer messages get \"more\": an expanded bubble shows the whole text, up to twice as wide, and its countdown stops until you collapse it or close it with X.", "Szerokość i wysokość zwiniętego dymku. Dłuższe wiadomości mają \"więcej\": rozwinięty dymek pokazuje cały tekst, do dwóch razy szerzej, a odliczanie stoi, dopóki go nie zwiniesz albo nie zamkniesz X."))
+                    .foregroundStyle(.secondary)
             }
             Section(tr("Animation", "Animacja")) {
                 Picker(tr("Frames per second", "Klatki na sekundę"), selection: $settings.fps) {
@@ -54,6 +77,10 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 520)
         .frame(minHeight: 360)
+    }
+
+    private func preview() {
+        if !Pet.shared.bubbles.speaking { Pet.shared.say(DebugTexts.long(settings.lang), for: 4) }
     }
 }
 

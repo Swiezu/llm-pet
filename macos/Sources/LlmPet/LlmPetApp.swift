@@ -38,6 +38,12 @@ private struct MenuContent: View {
             Button(tr("10 s, with a folder link", "10 s, z linkiem do folderu")) {
                 pet.say(DebugTexts.timedLink(settings.lang), for: 10, link: FileManager.default.homeDirectoryForCurrentUser.appending(path: "Downloads"))
             }
+            Button(tr("Long, 30 s (expand)", "Długi, 30 s (rozwiń)")) {
+                pet.say(DebugTexts.long(settings.lang), for: 30)
+            }
+            Button(tr("Long, until closed (expand)", "Długi, do zamknięcia (rozwiń)")) {
+                pet.say(DebugTexts.long(settings.lang), for: .infinity)
+            }
             Button(tr("5 bubbles at once (queue)", "5 dymków naraz (kolejka)")) {
                 for index in 1...5 { pet.say(tr("Bubble \(index) of 5", "Dymek \(index) z 5"), for: 4) }
             }

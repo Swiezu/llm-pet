@@ -5,9 +5,8 @@ import SwiftUI
 @MainActor
 @Observable
 final class Bubble {
-    static let lines = 8
     private static let baseFont: CGFloat = 13
-    private static let baseWidth: CGFloat = 300
+    private static let foldTime: TimeInterval = 0.35
 
     private(set) var text: String?
     private(set) var tail: CGFloat = 0
@@ -15,19 +14,35 @@ final class Bubble {
     private(set) var pointing = true
     private(set) var waiting = 0
     private(set) var shown = false
-    private(set) var width: CGFloat = 0
     private(set) var count = 0
     private(set) var background = Color.white
     private(set) var foreground = Color.black.opacity(0.85)
     private(set) var link: URL?
     private(set) var linkTitle = ""
     private(set) var forever = false
+    private(set) var truncated = false
+    private(set) var expanded = false
+    private(set) var openness: CGFloat = 0
+    private(set) var short = ""
+    private(set) var full = ""
+    private(set) var folded = CGSize.zero
+    private(set) var unfolded = CGSize.zero
+    private(set) var scroll: CGFloat?
+    private(set) var inset = CGPoint.zero
+    private(set) var lines = AppSettings.shared.bubbleLines
     private(set) var progress: Double = 0
     private(set) var fontSize = CGFloat(AppSettings.shared.bubbleFont)
 
     var font: NSFont { .monospacedSystemFont(ofSize: fontSize, weight: .semibold) }
     var linkFont: NSFont { .monospacedSystemFont(ofSize: max(9, fontSize - 2), weight: .semibold) }
     var zoom: CGFloat { fontSize / Self.baseFont }
+    var expandTitle: String { expanded ? Self.less : Self.more }
+    var width: CGFloat { (folded.width + (unfolded.width - folded.width) * openness).rounded() }
+    var textHeight: CGFloat { (folded.height + (unfolded.height - folded.height) * openness).rounded() }
+    var shortCount: Int { expanded ? short.count : count }
+    var fullCount: Int { expanded ? count : full.count }
+    private static var more: String { tr("more", "więcej") }
+    private static var less: String { tr("less", "mniej") }
 
     private enum Phase { case idle, typing, reading, erasing, hiding }
 
@@ -35,19 +50,28 @@ final class Bubble {
     @ObservationIgnored private var phase = Phase.idle
     @ObservationIgnored private var phaseStart = Date.now
     @ObservationIgnored private var readTime: TimeInterval = 4
+    @ObservationIgnored private var paused: TimeInterval = 0
+    @ObservationIgnored private var foldFrom: CGFloat = 0
+    @ObservationIgnored private var foldStart = Date.now
+    @ObservationIgnored private var maxWidth = CGFloat(AppSettings.shared.bubbleWidth)
+    @ObservationIgnored private var room = NSSize(width: 1200, height: 800)
     @ObservationIgnored private var window: NSPanel?
-    @ObservationIgnored private var host: NSHostingController<BubbleView>?
+    @ObservationIgnored private var host: NSHostingController<BubbleCanvas>?
+    @ObservationIgnored private var measurer: NSHostingController<BubbleView>?
+    @ObservationIgnored private var measured = NSSize.zero
+    @ObservationIgnored private var lastFit = NSSize.zero
+    @ObservationIgnored private var chrome: NSSize?
 
     func say(_ message: String, for seconds: TimeInterval? = nil, link: URL? = nil, background: Color = .white, foreground: Color = .black.opacity(0.85)) {
         self.background = background
         self.foreground = foreground
         self.link = link
         linkTitle = link.map(Self.title) ?? ""
-        let char = "M".size(withAttributes: [.font: font]).width
-        let capacity = Int(Self.baseWidth * zoom / char * CGFloat(Self.lines) * 0.85)
-        let text = message.count > capacity ? String(message.prefix(capacity - 1)).trimmingCharacters(in: .whitespaces) + "…" : message
-        self.text = text
-        measure()
+        full = message
+        expanded = false
+        openness = 0
+        fit()
+        let text = self.text ?? message
         count = 0
         shown = false
         phase = .typing
@@ -65,6 +89,7 @@ final class Bubble {
 
     func update(_ now: Date) {
         guard let text else { return }
+        fold(now)
         let total = text.count
         let elapsed = max(0, now.timeIntervalSince(phaseStart))
         switch phase {
@@ -78,6 +103,7 @@ final class Bubble {
                 phaseStart = now
             }
         case .reading:
+            if expanded { break }
             let next = readTime.isFinite ? min(1, elapsed / readTime) : 0
             if abs(next - progress) > 0.002 || next == 1 { progress = next }
             if elapsed >= readTime {
@@ -107,6 +133,32 @@ final class Bubble {
         phaseStart = .now.addingTimeInterval(-Double(text.count - count) / max(160, Double(text.count) / 0.6))
     }
 
+    func toggleExpanded() {
+        guard truncated, phase == .typing || phase == .reading else { return }
+        if phase == .typing {
+            phase = .reading
+            phaseStart = .now
+        }
+        if expanded {
+            phaseStart = .now.addingTimeInterval(-paused)
+        } else {
+            paused = Date.now.timeIntervalSince(phaseStart)
+        }
+        expanded.toggle()
+        foldFrom = openness
+        foldStart = .now
+        fit()
+        count = text?.count ?? 0
+    }
+
+    private func fold(_ now: Date) {
+        let goal: CGFloat = expanded ? 1 : 0
+        guard openness != goal else { return }
+        let p = min(1, now.timeIntervalSince(foldStart) / Self.foldTime)
+        let eased = p < 0.5 ? 4 * p * p * p : 1 - pow(-2 * p + 2, 3) / 2
+        openness = p >= 1 ? goal : foldFrom + (goal - foldFrom) * eased
+    }
+
     func open() {
         guard let link else { return }
         NSWorkspace.shared.open(link)
@@ -119,17 +171,57 @@ final class Bubble {
         return (url.scheme ?? "") + "://" + (url.host() ?? "") + " ↗"
     }
 
-    private func measure() {
-        let widest = (text ?? "").split(separator: "\n", omittingEmptySubsequences: false).map { String($0).size(withAttributes: [.font: font]).width }.max() ?? 0
+    private func fit() {
+        let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
+        truncated = height(full, width: maxWidth) > lineHeight * (CGFloat(lines) + 0.5)
+        var short = full
+        if truncated {
+            let char = "M".size(withAttributes: [.font: font]).width
+            let capacity = Int(maxWidth / char * CGFloat(lines) * 0.85)
+            if short.count > capacity { short = String(short.prefix(capacity - 1)).trimmingCharacters(in: .whitespaces) + "…" }
+        }
+        if self.short != short { self.short = short }
+        let text = expanded ? full : short
+        if self.text != text { self.text = text }
         let linkWidth = link == nil ? 0 : (linkTitle as NSString).size(withAttributes: [.font: linkFont]).width
-        width = min(Self.baseWidth * zoom, ceil(max(widest, linkWidth)) + 2)
+        let expandWidth = truncated ? [Self.more, Self.less].map { ($0 as NSString).size(withAttributes: [.font: linkFont]).width }.max()! + linkFont.pointSize + 4 : 0
+        let footer = linkWidth + expandWidth + (link != nil && truncated ? 12 : 0)
+        let foldedWidth = min(maxWidth, ceil(max(widest(short), footer)) + 2)
+        folded = CGSize(width: foldedWidth, height: truncated ? min(height(short, width: foldedWidth), ceil(lineHeight * CGFloat(lines))) : 0)
+        guard truncated else {
+            unfolded = folded
+            if scroll != nil { scroll = nil }
+            count = min(count, text.count)
+            return
+        }
+        let wide = max(maxWidth, min(maxWidth * 2, room.width))
+        let unfoldedWidth = min(wide, ceil(max(widest(full), footer)) + 2)
+        let tall = height(full, width: unfoldedWidth)
+        let scroll: CGFloat? = tall > room.height ? max(folded.height, room.height) : nil
+        if scroll != self.scroll { self.scroll = scroll }
+        unfolded = CGSize(width: unfoldedWidth, height: scroll ?? tall)
+        count = min(count, text.count)
     }
 
-    func layout(below: Bool, pointing: Bool, waiting: Int) -> NSSize {
-        let size = CGFloat(AppSettings.shared.bubbleFont)
-        if size != fontSize {
+    private func widest(_ string: String) -> CGFloat {
+        string.split(separator: "\n", omittingEmptySubsequences: false).map { String($0).size(withAttributes: [.font: font]).width }.max() ?? 0
+    }
+
+    private func height(_ string: String, width: CGFloat) -> CGFloat {
+        ceil((string as NSString).boundingRect(with: NSSize(width: width, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font]).height)
+    }
+
+    func layout(below: Bool, pointing: Bool, waiting: Int, room: NSSize) -> NSSize {
+        let settings = AppSettings.shared
+        let size = CGFloat(settings.bubbleFont)
+        let maxWidth = CGFloat(settings.bubbleWidth)
+        let moved = abs(room.width - self.room.width) > 24 || abs(room.height - self.room.height) > 24
+        if moved { self.room = room }
+        if size != fontSize || maxWidth != self.maxWidth || settings.bubbleLines != lines || moved && expanded {
             fontSize = size
-            measure()
+            self.maxWidth = maxWidth
+            lines = settings.bubbleLines
+            fit()
         }
         if below != self.below { self.below = below }
         if pointing != self.pointing { self.pointing = pointing }
@@ -142,22 +234,37 @@ final class Bubble {
             panel.isOpaque = false
             panel.hasShadow = false
             panel.ignoresMouseEvents = true
-            let host = NSHostingController(rootView: BubbleView(bubble: self))
+            let host = NSHostingController(rootView: BubbleCanvas(bubble: self))
             host.sizingOptions = []
             panel.contentViewController = host
+            let measurer = NSHostingController(rootView: BubbleView(bubble: self))
+            measurer.sizingOptions = []
             window = panel
             self.host = host
+            self.measurer = measurer
         }
-        let fit = host?.sizeThatFits(in: NSSize(width: 400, height: 1000)) ?? .zero
-        return NSSize(width: ceil(fit.width), height: ceil(fit.height))
+        let fit = measurer?.sizeThatFits(in: NSSize(width: 4000, height: 4000)) ?? .zero
+        if fit == lastFit, openness == (expanded ? 1 : 0) { chrome = NSSize(width: fit.width - width, height: fit.height - textHeight) }
+        lastFit = fit
+        let base = chrome ?? NSSize(width: fit.width - width, height: fit.height - textHeight)
+        measured = NSSize(width: base.width + width, height: base.height + textHeight)
+        return NSSize(width: ceil(measured.width), height: ceil(measured.height))
     }
 
-    func move(to frame: NSRect, tail: CGFloat) {
+    func move(to frame: NSRect, center: CGFloat, screen: NSRect) {
         guard let window else { return }
-        if abs(tail - self.tail) > 0.5 { self.tail = tail }
-        let frame = frame.integral
-        if window.frame != frame { window.setFrame(frame, display: true) }
-        let interactive = forever || link != nil
+        let canvas = NSSize(
+            width: max(frame.width, ceil(measured.width + max(folded.width, unfolded.width) - width - 0.01)),
+            height: max(frame.height, ceil(measured.height + max(folded.height, unfolded.height) - textHeight - 0.01))
+        )
+        let x = canvas.width > frame.width ? min(max(center - canvas.width / 2, screen.minX + 4), screen.maxX - canvas.width - 4) : frame.minX
+        let target = NSRect(x: x, y: below ? frame.maxY - canvas.height : frame.minY, width: canvas.width, height: canvas.height).integral
+        let inset = CGPoint(x: (frame.minX - target.minX).rounded(), y: (target.maxY - frame.maxY).rounded())
+        if inset != self.inset { self.inset = inset }
+        let tail = (center - target.minX - inset.x).rounded()
+        if tail != self.tail { self.tail = tail }
+        if window.frame != target { window.setFrame(target, display: true) }
+        let interactive = frame.contains(NSEvent.mouseLocation)
         if window.ignoresMouseEvents == interactive { window.ignoresMouseEvents = !interactive }
         if !window.isVisible { window.orderFrontRegardless() }
     }
@@ -166,5 +273,6 @@ final class Bubble {
         window?.orderOut(nil)
         window = nil
         host = nil
+        measurer = nil
     }
 }

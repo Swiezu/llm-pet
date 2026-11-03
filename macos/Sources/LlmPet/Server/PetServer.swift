@@ -99,7 +99,8 @@ final class PetServer {
             }
             guard pet.enabled else { return .error(409, "pet is hidden") }
             guard !channel.muted else { return .json(["ok": true, "shown": false, "muted": true, "channel": channel.id]) }
-            guard let queued = pet.say(text, for: (body["seconds"] as? Double).map { $0 == 0 ? .infinity : min(3600, max(1, $0)) }, link: link, animation: animation, on: channel) else { return .error(429, "too many bubbles waiting (\(BubbleStack.maxQueue)), try again later") }
+            let message = text.replacing("\r\n", with: "\n").replacing("\r", with: "\n").replacing("\\n", with: "\n")
+            guard let queued = pet.say(message, for: (body["seconds"] as? Double).map { $0 == 0 ? .infinity : min(3600, max(1, $0)) }, link: link, animation: animation, on: channel) else { return .error(429, "too many bubbles waiting (\(BubbleStack.maxQueue)), try again later") }
             return .json(["ok": true, "shown": true, "queued": queued, "channel": channel.id])
         case ("POST", "/action"):
             guard let name = request.json?["name"] as? String, let action = Action(rawValue: name) else { return Self.unknownAction }

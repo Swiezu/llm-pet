@@ -46,16 +46,17 @@ final class BubbleStack {
         let step = min(1, now.timeIntervalSince(lastPlace) * 14)
         lastPlace = now
         guard !active.isEmpty else { return }
-        let stacked = active.reduce(CGFloat(0)) { $0 + $1.layout(below: $1.below, pointing: $1 === active.first, waiting: $1.waiting).height - Self.overlap }
+        let room = NSSize(width: screen.width - 40, height: max(screen.maxY - head, bottom - screen.minY) - 90)
+        let stacked = active.reduce(CGFloat(0)) { $0 + $1.layout(below: $1.below, pointing: $1 === active.first, waiting: $1.waiting, room: room).height - Self.overlap }
         let below = head + stacked > screen.maxY
         var offset: CGFloat = 0
         for (index, bubble) in active.enumerated() {
-            let size = bubble.layout(below: below, pointing: index == 0, waiting: index == active.count - 1 ? queue.count : 0)
+            let size = bubble.layout(below: below, pointing: index == 0, waiting: index == active.count - 1 ? queue.count : 0, room: room)
             let current = bubble.offset.map { $0 + (offset - $0) * step } ?? offset
             bubble.offset = current
             let x = min(max(center - size.width / 2, screen.minX + 4), screen.maxX - size.width - 4)
             let y = below ? max(screen.minY, bottom - size.height + 10 - current) : head + current
-            bubble.move(to: NSRect(x: x, y: y, width: size.width, height: size.height), tail: center - x)
+            bubble.move(to: NSRect(x: x, y: y, width: size.width, height: size.height), center: center, screen: screen)
             offset += size.height - Self.overlap
         }
     }
