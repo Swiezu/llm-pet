@@ -20,7 +20,7 @@ A channel is addressed by name (case insensitive) or `id`. There is no mute in t
 ## Clients
 | directory | usage |
 |---|---|
-| `js/` | [`@swiezu/llm-pet-sdk`](https://www.npmjs.com/package/@swiezu/llm-pet-sdk): `npm install @swiezu/llm-pet-sdk`, then `import { say, action, actions, channels, addChannel, removeChannel, status, show, hide } from '@swiezu/llm-pet-sdk'`; `say('Build is green', { channel: 'Build', animation: 'party', seconds: 0, link: 'https://...' })` (Node 22+, no dependencies); tests: `npm test` in the repository root |
+| `js/` | `@swiezu/llm-pet-sdk`, not on npm: `npm install /path/to/llm-pet/sdk/js` from a clone, then `import { say, action, actions, channels, addChannel, removeChannel, status, show, hide } from '@swiezu/llm-pet-sdk'`; `say('Build is green', { channel: 'Build', animation: 'party', seconds: 0, link: 'https://...' })` (Node 22+, no dependencies); tests: `npm test` in the repository root |
 | `swift/` | Swift package `LlmPetKit`: `try await LlmPet().say("Build is green", channel: "Build", animation: "party", seconds: 0, link: "https://...")`, `.action("typing")`, `.actions()`, `.channels()`, `.addChannel("Build", color: "#3B4A6B")`, `.removeChannel("Build")`, `.status()`; local dependency `.package(path: "<path>/sdk/swift")` |
 | `shell/llm-pet` | `llm-pet say "text" -c Build -a party -s 5 -l https://...` (`-s 0` = until closed), `llm-pet action typing`, `llm-pet actions`, `llm-pet channels`, `llm-pet channel-add Build "#3B4A6B"`, `llm-pet channel-remove Build`, `llm-pet status`, `llm-pet show`, `llm-pet hide` (curl and jq shipped with macOS) |
 

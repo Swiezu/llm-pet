@@ -3,8 +3,9 @@
 JavaScript client for the local API of [llm-pet](https://github.com/Swiezu/llm-pet), a pixel Clawd that lives on your macOS desktop. Show speech bubbles, play animations and manage channels from Node.
 
 ```bash
-npm install @swiezu/llm-pet-sdk
+npm install /path/to/llm-pet/sdk/js
 ```
+Not published to npm: install it from a clone of the repository (no dependencies, Node 22+).
 
 ```js
 import { say, action, actions, channels, addChannel, removeChannel, status, show, hide } from '@swiezu/llm-pet-sdk'

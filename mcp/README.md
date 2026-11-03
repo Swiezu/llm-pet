@@ -1,6 +1,6 @@
 # @swiezu/llm-pet-mcp
 
-An MCP server (stdio) that lets an LLM drive [llm-pet](https://github.com/Swiezu/llm-pet), a pixel Clawd on your macOS desktop. It talks to the app through [`@swiezu/llm-pet-sdk`](https://www.npmjs.com/package/@swiezu/llm-pet-sdk), so `llm-pet.app` has to be running.
+An MCP server (stdio) that lets an LLM drive [llm-pet](https://github.com/Swiezu/llm-pet), a pixel Clawd on your macOS desktop. It talks to the app through the JS SDK from [`sdk/js`](../sdk/js), so `llm-pet.app` has to be running.
 
 | tool | what it does |
 |---|---|
@@ -12,18 +12,13 @@ An MCP server (stdio) that lets an LLM drive [llm-pet](https://github.com/Swiezu
 | `pet_remove_channel` | delete a channel (not the main one) |
 | `pet_status` | is it running, is it visible, what is it doing |
 
-Muting channels is only possible in the app settings, not through MCP.
+Muting channels is only possible in the app (settings, menu bar, right-click menu on the pet), not through MCP.
 
 ## Setup
 ```bash
-claude mcp add llm-pet -- npx -y @swiezu/llm-pet-mcp
-```
-Any other MCP client: command `npx`, arguments `-y @swiezu/llm-pet-mcp`.
-
-## From the repository
-```bash
-npm install && npm test
+git clone https://github.com/Swiezu/llm-pet.git && cd llm-pet && npm install
 claude mcp add llm-pet -- node "$PWD/mcp/server.mjs"
 ```
+Any other MCP client: command `node`, argument the absolute path to `mcp/server.mjs`. Tests: `npm test` in the repository root.
 
 License: MIT.

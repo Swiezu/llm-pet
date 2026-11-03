@@ -1,6 +1,7 @@
 {
   "name": "@swiezu/llm-pet-mcp",
   "version": "0.1.0",
+  "private": true,
   "description": "MCP server that lets an LLM send speech bubbles and animations to the llm-pet macOS desktop pet",
   "type": "module",
   "bin": {
@@ -37,8 +38,5 @@
   "bugs": "https://github.com/Swiezu/llm-pet/issues",
   "engines": {
     "node": ">=22"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
