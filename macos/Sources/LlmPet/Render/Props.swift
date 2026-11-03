@@ -199,6 +199,24 @@ extension Art {
     ]
     static let smokeRing = PixelArt(rows: ["..hh..", ".hpph.", "hp..ph", "hp..ph", ".hpph.", "..hh.."])
     static let wisp = PixelArt(rows: [".h", "hp", "h."])
+    static let wrap = PixelArt(rows: ["vvvvvvvvvvvv", "vbbbnbbbbnbv", "vbbnbbbbnbbv", "vvvvvvvvvvvv"])
+    static let wrapFilled = PixelArt(rows: ["vvvvvvvvvvvv", "vbeeneeeenbv", "vbneeeneeebv", "vvvvvvvvvvvv"])
+    static let wrapRolling = PixelArt(rows: ["...vvvvvvvvv", ".vbbneeenbbv", "vbbnbbbbnbbv", "vvvvvvvvvvvv"])
+    static let blunt = PixelArt(rows: [".vvvvvvvvvvv", "bbbnbbbbnbbb", "bbnbbbbnbbbb", ".vvvvvvvvvvv"])
+    static let bluntLit = [
+        PixelArt(rows: [".vvvvvvvvvvh", "bbbnbbbbnbbf", "bbnbbbbnbbbq", ".vvvvvvvvvvh"]),
+        PixelArt(rows: [".vvvvvvvvvvh", "bbbnbbbbnbbq", "bbnbbbbnbbbf", ".vvvvvvvvvvh"]),
+    ]
+    static let bluntHot = PixelArt(rows: [".vvvvvvvvvvf", "bbbnbbbbnbby", "bbnbbbbnbbby", ".vvvvvvvvvvf"])
+    static let bluntShort = PixelArt(rows: [".vvvvvh", "bbbnbbf", "bbnbbbq", ".vvvvvh"])
+    static let burger = [
+        PixelArt(rows: ["..bbbb..", ".bibbib.", "bbbbbbbb", "eeeeeeee", "nyyyyyyn", "nnnnnnnn", ".bbbbbb."]),
+        PixelArt(rows: ["..bbb...", ".bibb...", "bbbbbb..", "eeeeee..", "nyyyyy..", "nnnnn...", ".bbbb..."]),
+        PixelArt(rows: ["..b.....", ".bi.....", "bbbb....", "eeee....", "nyyy....", "nnn.....", ".bb....."]),
+        PixelArt(rows: ["........", "........", "bb......", "ee......", "ny......", "n.......", "........"]),
+    ]
+    static let soda = PixelArt(rows: ["hhh", "qqq", "qiq", "qiq", "qqq", "hhh"])
+    static let growl = PixelArt(rows: [".k.k", "k.k."])
     static let speaker = PixelArt(rows: [
         "....kk",
         "...khk",

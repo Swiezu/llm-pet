@@ -51,6 +51,8 @@ Speech bubble (separate window, keeps to screen edges, flips below the head when
 | `compact` | three stomps that compress the token pile, the bar drops from 100% to 20%, the pile becomes a packed cube, Claude pockets it and sighs with relief |
 | `helloai` | hello fellow AI: puts on an antenna, LED eyes, a stiff robotic step-by-step wave, signal waves and floating 0s and 1s, then takes the disguise off |
 | `smoke` | smoke break: takes a cigarette out, puts it in its mouth, lights it with a lighter (flame, glowing tip, wisps), a long drag, exhales smoke, holds it in its paw and blows a smoke ring, a second drag, drops the butt and stomps it out twice, sighs |
+| `chill` | takes out a brown wrap, sprinkles it, rolls a thick one with quick paw moves, puts it in its mouth and lights it, a long drag, exhales big clouds; then heavy lidded red eyes (`Eyes.stoned`), a slow lazy sway to floating notes and fits of giggles, a last drag on the short end, one more cloud |
+| `lunch` | lunch break: the tummy growls (shaking, "!", squiggles), takes out a burger (sesame bun, lettuce, cheese, patty), four bites that shrink it with chewing and flying crumbs, pats its full belly, drinks a soda, burps a cloud, a happy heart |
 | `mute` | a speaker pops up above its head, gets crossed out in red, Claude covers its mouth and zips it shut, nods; plays when a channel is muted |
 | `unmute` | the crossed out speaker, Claude unzips its mouth, the cross disappears, sound waves and singing notes, a little dance; plays when a channel is unmuted |
 | `shipit` | Ship it!: packs code into a box, tapes it, stamps a green ✓, a little ship sails in, the box lands on deck and sails away, Claude salutes |

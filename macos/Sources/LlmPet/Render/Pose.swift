@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct Pose {
-    enum Eyes { case open, blink, happy, closed, wide, dizzy, focused, led }
+    enum Eyes { case open, blink, happy, closed, wide, dizzy, focused, led, stoned }
     enum Arm: Equatable { case side, up, flail, hidden, diagUp, diagDown, tucked, reach(CGFloat), chin }
     enum Band { case none, grab, grabUp, hand, hanging, raised, tilted(CGFloat), line, head, ring(Ring) }
     enum Bells { case none, sides, floor }

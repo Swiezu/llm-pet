@@ -28,6 +28,8 @@ extension Pose {
         case .helloAI: helloAI(t: t, clock: clock)
         case .shipIt: shipIt(t: t, clock: clock)
         case .smoke: smoke(t: t, clock: clock)
+        case .chill: chill(t: t, clock: clock)
+        case .lunch: lunch(t: t, clock: clock)
         case .mute: mute(t: t, clock: clock)
         case .unmute: unmute(t: t, clock: clock)
         }

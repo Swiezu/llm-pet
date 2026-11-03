@@ -196,6 +196,11 @@ struct SpriteView: View {
                     box(x + 0.15, 2.4 + b, 0.35, 0.35, .white.opacity(0.75))
                 case .blink: box(x, 2.95 + b, 1.05, 0.3, .black)
                 case .closed: box(x, 2.85 + b, 1.05, 0.55, .black.opacity(0.8))
+                case .stoned:
+                    box(x - 0.15, 2.6 + b, 1.35, 0.32, Style.shade)
+                    box(x, 2.92 + b, 1.05, 0.46, .black.opacity(0.9))
+                    box(x + 0.15, 2.98 + b, 0.3, 0.18, .white.opacity(0.6))
+                    box(x - 0.1, 3.38 + b, 1.25, 0.28, Style.alarm.opacity(0.9))
                 case .happy:
                     box(x, 2.9 + b, 0.36, 0.36, .black)
                     box(x + 0.34, 2.55 + b, 0.36, 0.36, .black)
