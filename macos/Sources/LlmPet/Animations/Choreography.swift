@@ -27,13 +27,18 @@ extension Pose {
         case .compact: contextCompact(t: t, clock: clock)
         case .helloAI: helloAI(t: t, clock: clock)
         case .shipIt: shipIt(t: t, clock: clock)
+        case .smoke: smoke(t: t, clock: clock)
+        case .mute: mute(t: t, clock: clock)
+        case .unmute: unmute(t: t, clock: clock)
         }
     }
 
     @MainActor
     init(pet: Pet, now: Date) {
-        let clock = now.timeIntervalSinceReferenceDate
-        if pet.held || pet.falling {
+        let clock = pet.time(now)
+        if !AppSettings.shared.animationsEnabled {
+            self.init()
+        } else if pet.held || pet.falling {
             self.init()
             carry(held: pet.held, clock: clock)
         } else if let landed = pet.landStart, now.timeIntervalSince(landed) < 0.3 {
@@ -43,7 +48,7 @@ extension Pose {
             self.init()
             resize(growing: pet.growing, clock: clock)
         } else {
-            self.init(action: pet.action, t: now.timeIntervalSince(pet.actionStart), clock: clock, walked: pet.walked)
+            self.init(action: pet.action, t: pet.elapsed(now), clock: clock, walked: pet.walked)
         }
     }
 }

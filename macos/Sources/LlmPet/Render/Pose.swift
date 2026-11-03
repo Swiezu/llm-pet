@@ -3,11 +3,20 @@ import SwiftUI
 struct Pose {
     enum Eyes { case open, blink, happy, closed, wide, dizzy, focused, led }
     enum Arm: Equatable { case side, up, flail, hidden, diagUp, diagDown, tucked, reach(CGFloat), chin }
-    enum Band { case none, grab, grabUp, hand, hanging, raised, tilted(CGFloat), line, head }
+    enum Band { case none, grab, grabUp, hand, hanging, raised, tilted(CGFloat), line, head, ring(Ring) }
     enum Bells { case none, sides, floor }
     enum Letter { case raised, envelope, opening(CGFloat), reading }
     enum Paper { case sheet, folded(Int), plane, raised }
     enum Cup { case back, front }
+
+    struct Ring {
+        var x: CGFloat
+        var y: CGFloat
+        var w: CGFloat
+        var h: CGFloat
+        var angle: CGFloat = 0
+        var opacity: CGFloat = 1
+    }
 
     struct Keyboard {
         var dx: CGFloat = 0

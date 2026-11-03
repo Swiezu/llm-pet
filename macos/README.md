@@ -2,11 +2,15 @@
 
 A pixel Clawd (8×6 body, 1×1 eyes, 2×2 arms, 4 legs) in its own transparent window that stays on top (`.statusBar` level, on every Space). A standalone menu bar app that takes messages through a local API (see [API](#api)).
 
-## Menu bar (paw icon)
+## Menu bar (paw icon) and right-click menu
+Right-clicking the pet opens the same menu (`PetMenu`).
 | item | what it does |
 |---|---|
 | Show / Hide pet | showing starts with the teleport and a greeting; state in `UserDefaults` (`petEnabled`) |
 | Settings… (⌘,) | settings window |
+| Animations | switch; off = no animations at all (API, menu and click are ignored, no teleport, no blinking), the pet stands still (`animationsEnabled`) |
+| Fast mode | switch; animations run at the fast speed from the settings (`fastMode`) |
+| Channels | a switch per channel, checked = shown, unchecked = muted (same as in the settings) |
 | DEBUG ANIMATION | plays the chosen animation |
 | DEBUG TEXT | shows a text from the test pool (`Pet/DebugTexts.swift`) on the main channel; at the bottom a bubble that stays until closed with a link, a 10 s bubble with a folder link, a long bubble to expand (30 s and until closed) and 5 bubbles at once (queue) |
 | DEBUG CHANNEL | a random test text on the chosen channel (checks color and muting) |
@@ -14,12 +18,12 @@ A pixel Clawd (8×6 body, 1×1 eyes, 2×2 arms, 4 legs) in its own transparent w
 
 ## Settings
 - **Language**: English or Polish; asked once on first launch, changeable later. Applies to the menu, settings, animation titles, test texts and the greeting. The API, MCP and SDKs are always in English.
-- **Channels**: the main channel (cannot be deleted) and any number of others: name, bubble color (text color adapts to the background), mute, delete. Muting is only possible here; messages sent to a muted channel are not shown. Stored in `UserDefaults` (`channels`).
-- **Size**: pet size 50-200% (`petScale`; while the slider moves the pet springs to the new size, straining with raised paws and an aura when it grows, squeezing and sweating when it shrinks) bubble text 10-22 pt (`bubbleFont`), bubble width 160-800 pt (`bubbleWidth`, default 300) and height 2-30 lines (`bubbleLines`, default 8) of a collapsed bubble; visible bubbles adapt live, with no bubble on screen a sample one appears.
-- **Animation**: frames per second (12, 24, 30, 60, 120; default 30). Movement is time based, so the pet moves at the same speed at any frame rate.
+- **Channels**: the main channel (cannot be deleted) and any number of others: name, bubble color (text color adapts to the background), mute, delete. Muting is only possible here; messages sent to a muted channel are not shown. Stored in `UserDefaults` (`channels`). Muting or unmuting a channel (here, in the menu bar or the right-click menu) plays the `mute` or `unmute` animation.
+- **Size**: pet size 50-200% (`petScale`; while the slider moves the pet springs to the new size, straining with raised paws and an aura when it grows, squeezing and sweating when it shrinks) bubble text 10-22 pt (`bubbleFont`), bubble width 160-800 pt (`bubbleWidth`, default 300) and height 2-30 lines (`bubbleLines`, default 8) of a collapsed bubble (section "Max bubble size"); visible bubbles adapt live, with no bubble on screen a sample one appears.
+- **Animation**: speed 0.25-3× (`animationSpeed`, default 1) and speed in fast mode 1-5× (`fastSpeed`, default 2), both scale the animation clock and walking (bubbles keep their own timing; changing speed mid-animation re-anchors the clock, so nothing jumps), in 0.25× steps; fast mode and animations switches (also in the menus); frames per second on power (`fpsPower`) and on battery (`fpsBattery`), picked by the current power source (IOKit power source notifications, shown under the section): 15, 30, 60, 120, 144, 165 and 240, only those the display supports (`NSScreen.maximumFramesPerSecond`), plus VSync as the last option (stored as 0), which follows the display refresh rate; older values (12, 24) move to the nearest option. The pet is drawn with a display synced `TimelineView(.animation)`, capped at the FPS. Movement is time based, so the pet moves at the same speed at any frame rate.
 
 ## Behaviour
-On its own the pet just stands and blinks: no random actions, no random texts. Animations are triggered from the DEBUG menu, the API or a click (a random trick from `Action.tricks`). Drag it to move it (it dangles and flails); on release it settles gently a few points down (`Pet.drop`) and stays where you left it.
+On its own the pet just stands and blinks: no random actions, no random texts. Animations are triggered from the DEBUG menu, the API or a click (a random trick from `Action.tricks`). Drag it to move it (it dangles and flails); on release it settles gently a few points down (`Pet.drop`) and stays where you left it. The position (`petX`, `petY`) is saved after landing, after a walk, on hide and on quit, and restored on show and launch.
 
 Speech bubble (separate window, keeps to screen edges, flips below the head when there is no room above, follows hops): `Pet.shared.say("text", on: channel)`. Text types and erases itself, reading time depends on length unless `for:` sets it (`.infinity` = until closed), line breaks are kept, size limited by `bubbleWidth` and `bubbleLines` from the settings, colors come from the channel. Text that does not fit ends with "…" and gets "more" at the bottom left: it expands the bubble to the full text (up to twice the width, at most the screen; scrollable when taller than the room above or below the pet), the bubble animates its size over 0.35 s (`Bubble.foldTime`, crossfading the short and full text, the ring around the X fading out), the countdown pauses; "less" collapses it and the countdown resumes. The API turns `\r\n` and a literal `\\n` into line breaks. Top right: an X that closes the bubble, inside a ring that empties over the reading time (no ring for a bubble without a time limit or an expanded one). `link:` adds a link at the bottom right (host, file name or scheme) that opens with `NSWorkspace` and closes the bubble. The bubble window takes clicks only while the cursor is over the bubble itself (`ignoresMouseEvents` follows the mouse every frame), so its transparent margin never blocks other bubbles or apps. A bubble that can expand gets a window sized for its expanded state (`BubbleCanvas` places the bubble inside it), so the fold animation never resizes or moves the window. `BubbleStack` keeps at most 2 bubbles on screen (the oldest nearest to the pet, with the tail; when it goes, the next one slides down), queues the rest (up to 20) and shows a "+n" badge on the outer bubble; an animation sent with a bubble plays when the bubble appears.
 
@@ -30,7 +34,7 @@ Speech bubble (separate window, keeps to screen edges, flips below the head when
 | `hop` | a series of hops with a mid-air tilt |
 | `flag` | checkered flag, 3/4 view, "^ ^" eyes, marching in place |
 | `party` | squats with a raised paw, confetti |
-| `workout` | headband, flexing, dumbbells, presses |
+| `workout` | puts the headband on (the band glides smoothly from the paw over the head), flexing, dumbbells, presses with an in-between frame, takes the headband off and tucks it away |
 | `sleep` | breathing and floating "z" |
 | `teleport` | a Claude-world portal (a spark that unfolds into a coral ring with an ivory core) pushes Claude out (the part still inside is hidden), a fast fall, a hard landing with dust, a bounce, dizzy stars, a shake-off; the portal collapses into a spark; then the greeting |
 | `typing` | sits down, whips out a keyboard and slams it down, types extremely fast (keys flash, sparks fly), puts it away |
@@ -46,6 +50,9 @@ Speech bubble (separate window, keeps to screen edges, flips below the head when
 | `contextfull` | tokens rain down and pile up, the context bar above its head goes from green to red and blinks, Claude swells, sweats, gets hit by tokens, gets dizzy |
 | `compact` | three stomps that compress the token pile, the bar drops from 100% to 20%, the pile becomes a packed cube, Claude pockets it and sighs with relief |
 | `helloai` | hello fellow AI: puts on an antenna, LED eyes, a stiff robotic step-by-step wave, signal waves and floating 0s and 1s, then takes the disguise off |
+| `smoke` | smoke break: takes a cigarette out, puts it in its mouth, lights it with a lighter (flame, glowing tip, wisps), a long drag, exhales smoke, holds it in its paw and blows a smoke ring, a second drag, drops the butt and stomps it out twice, sighs |
+| `mute` | a speaker pops up above its head, gets crossed out in red, Claude covers its mouth and zips it shut, nods; plays when a channel is muted |
+| `unmute` | the crossed out speaker, Claude unzips its mouth, the cross disappears, sound waves and singing notes, a little dance; plays when a channel is unmuted |
 | `shipit` | Ship it!: packs code into a box, tapes it, stamps a green ✓, a little ship sails in, the box lands on deck and sails away, Claude salutes |
 
 All animations use the same sprite on the same pixel grid (`Style.unit`); props (envelope, sheet, plane, bulb, portal, rocket, mug…) are pixel art in half sprite pixels (`Render/PixelArt.swift`, `Render/Props.swift`). The pet window is 360×320 pt to fit the portal, beams and flights.

@@ -116,6 +116,7 @@ struct SpriteView: View {
                     part(0, 1, 1.5, 2)
                     part(1, 1, 0.5, 2)
                     part(1, 1, 2, 0.5, Style.shade)
+                    if case .sides = pose.bells { disc(isRight ? right + 1.5 : left - 1.5, 0.4 + b, 1.4) }
                 case .diagDown:
                     part(0, 1, 3.5, 1.5)
                     part(1, 1, 4.5, 1.5)
@@ -161,6 +162,10 @@ struct SpriteView: View {
                 context.stroke(ellipse.applying(CGAffineTransform(rotationAngle: -0.25).concatenating(CGAffineTransform(translationX: center.x, y: center.y))), with: .color(Style.band), lineWidth: 0.38 * u)
             case .line: box(left - 1.2, 0.55 + b, width + 2.4, 0.38, Style.band)
             case .head: box(left - 0.2, 0.55 + b, width + 0.4, 0.38, Style.band)
+            case .ring(let ring):
+                let center = CGPoint(x: (Style.origin.x + ring.x) * u, y: (Style.origin.y + ring.y + b) * u)
+                let ellipse = Path(ellipseIn: CGRect(x: -ring.w / 2 * u, y: -ring.h / 2 * u, width: ring.w * u, height: ring.h * u))
+                context.stroke(ellipse.applying(CGAffineTransform(rotationAngle: ring.angle).concatenating(CGAffineTransform(translationX: center.x, y: center.y))), with: .color(Style.band.opacity(Double(ring.opacity))), style: StrokeStyle(lineWidth: 0.38 * u, lineJoin: .round))
             }
             let eyeColumns: [CGFloat] = pose.narrow ? [2.7, 6.7] : [3.0, 8.0]
             for (index, column) in eyeColumns.enumerated() {

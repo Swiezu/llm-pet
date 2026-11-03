@@ -7,19 +7,28 @@ struct LlmPetApp: App {
 
     var body: some Scene {
         MenuBarExtra("llm-pet", systemImage: "pawprint.fill") {
-            MenuContent()
+            PetMenu()
         }
     }
 }
 
-private struct MenuContent: View {
+struct PetMenu: View {
     private let pet = Pet.shared
-    private let settings = AppSettings.shared
+    @Bindable private var settings = AppSettings.shared
 
     var body: some View {
         Button(pet.enabled ? tr("Hide pet", "Schowaj peta") : tr("Show pet", "Pokaż peta")) { pet.toggle() }
         Button(tr("Settings…", "Ustawienia…")) { SettingsWindow.show() }
             .keyboardShortcut(",")
+        Divider()
+        Toggle(tr("Animations", "Animacje"), isOn: $settings.animationsEnabled)
+        Toggle(tr("Fast mode", "Tryb szybki"), isOn: $settings.fastMode)
+        Divider()
+        Section(tr("Channels", "Kanały")) {
+            ForEach($settings.channels) { $channel in
+                Toggle(channel.name, isOn: Binding(get: { !channel.muted }, set: { channel.muted = !$0 }))
+            }
+        }
         Divider()
         Menu("DEBUG ANIMATION") {
             ForEach(Action.allCases) { action in
@@ -84,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        Pet.shared.savePosition()
         PetServer.shared.stop()
     }
 }

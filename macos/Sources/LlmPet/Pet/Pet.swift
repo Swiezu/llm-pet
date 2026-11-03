@@ -12,7 +12,7 @@ final class Pet {
 
     private(set) var enabled = UserDefaults.standard.object(forKey: "petEnabled") as? Bool ?? true
     private(set) var action = Action.idle
-    private(set) var actionStart = Date.now
+    private(set) var actionStart: TimeInterval = 0
     private(set) var facing: CGFloat = 1
     @ObservationIgnored private(set) var walked: CGFloat = 0
     private(set) var held = false
@@ -25,18 +25,31 @@ final class Pet {
     @ObservationIgnored let bubbles = BubbleStack()
     @ObservationIgnored private var window: NSPanel?
     @ObservationIgnored private var loop: Task<Void, Never>?
-    @ObservationIgnored private var x: CGFloat = 170
-    @ObservationIgnored private var y: CGFloat?
+    @ObservationIgnored private var x = UserDefaults.standard.object(forKey: "petX") as? CGFloat ?? 170
+    @ObservationIgnored private var y = UserDefaults.standard.object(forKey: "petY") as? CGFloat
     @ObservationIgnored private var target: CGFloat = 240
     @ObservationIgnored private var speed: CGFloat = 0
     @ObservationIgnored private var fall: CGFloat = 0
     @ObservationIgnored private var rest: CGFloat = 0
     @ObservationIgnored private var grab = CGPoint.zero
-    @ObservationIgnored private var until = Date.distantFuture
     @ObservationIgnored private var lastTick = Date.now
+    @ObservationIgnored private var anchor = (date: Date.now, time: TimeInterval(0), speed: AppSettings.shared.speed)
     @ObservationIgnored private var scaleSpeed: CGFloat = 0
 
     var frameSize: CGSize { CGSize(width: Self.size.width * scale, height: Self.size.height * scale) }
+
+    func time(_ now: Date) -> TimeInterval {
+        anchor.time + now.timeIntervalSince(anchor.date) * anchor.speed
+    }
+
+    func elapsed(_ now: Date) -> TimeInterval {
+        time(now) - actionStart
+    }
+
+    func savePosition() {
+        UserDefaults.standard.set(Double(x), forKey: "petX")
+        if let y { UserDefaults.standard.set(Double(y), forKey: "petY") }
+    }
 
     func restore() {
         if enabled { show() }
@@ -59,7 +72,7 @@ final class Pet {
     }
 
     func perform(_ next: Action) {
-        guard enabled, !held, !falling else { return }
+        guard enabled, !held, !falling, AppSettings.shared.animationsEnabled || next == .idle else { return }
         if next == .walk, let screen = (window?.screen ?? NSScreen.main)?.visibleFrame {
             target = .random(in: (screen.minX - Self.edge * scale)...(screen.maxX - frameSize.width + Self.edge * scale))
         }
@@ -68,6 +81,7 @@ final class Pet {
     }
 
     func poke() {
+        guard AppSettings.shared.animationsEnabled else { return }
         start(Action.tricks.randomElement() ?? .hop)
     }
 
@@ -106,16 +120,22 @@ final class Pet {
         panel.orderFrontRegardless()
         window = panel
         lastTick = .now
-        perform(.teleport)
+        if AppSettings.shared.animationsEnabled {
+            perform(.teleport)
+        } else {
+            start(.idle)
+            say(DebugTexts.greeting(AppSettings.shared.lang))
+        }
         loop = Task { [weak self] in
             while let self, !Task.isCancelled {
                 tick()
-                try? await Task.sleep(for: .seconds(1.0 / Double(AppSettings.shared.fps)))
+                try? await Task.sleep(for: .seconds(1.0 / Double(max(AppSettings.shared.fps, 1))))
             }
         }
     }
 
     private func hide() {
+        savePosition()
         loop?.cancel()
         loop = nil
         window?.orderOut(nil)
@@ -125,8 +145,7 @@ final class Pet {
 
     private func start(_ next: Action) {
         action = next
-        actionStart = .now
-        until = .now.addingTimeInterval(min(next.duration, 1e9))
+        actionStart = time(.now)
     }
 
     private func finish() {
@@ -140,6 +159,9 @@ final class Pet {
         let now = Date.now
         let k = CGFloat(min(0.1, max(0, now.timeIntervalSince(lastTick))) * 60)
         lastTick = now
+        let rate = AppSettings.shared.speed
+        if rate != anchor.speed { anchor = (now, time(now), rate) }
+        if !AppSettings.shared.animationsEnabled, action != .idle { start(.idle) }
         let floor = screen.minY
         resize(now, dt: k / 60)
         bubbles.update(now)
@@ -155,18 +177,21 @@ final class Pet {
             if y == rest {
                 falling = false
                 landStart = now
+                savePosition()
             }
             place(screen, floor: floor)
             return
         }
-        if now >= until { finish() }
+        if elapsed(now) >= action.duration { finish() }
         if action == .walk {
+            let k = k * CGFloat(rate)
             let distance = abs(target - x)
             speed = min(1.8, speed + 0.05 * k, max(0.35, distance / 30))
             if distance <= speed * k {
                 x = target
                 speed = 0
                 start(.idle)
+                savePosition()
             } else {
                 facing = target > x ? 1 : -1
                 x += speed * facing * k
@@ -208,7 +233,7 @@ final class Pet {
 
     private func placeBubble(_ screen: NSRect, floor: CGFloat, now: Date) {
         let bottom = y ?? floor
-        let lift = action == .hop && !held && !falling ? Hop.lift(now.timeIntervalSince(actionStart)) : 0
+        let lift = action == .hop && !held && !falling ? Hop.lift(elapsed(now)) : 0
         bubbles.place(on: screen, center: x + frameSize.width / 2, bottom: bottom, head: bottom + (58 + lift) * scale)
     }
 }

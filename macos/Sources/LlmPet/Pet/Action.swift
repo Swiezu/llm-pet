@@ -4,6 +4,7 @@ enum Action: String, CaseIterable, Identifiable {
     case idle, walk, hop, flag, party, workout, sleep, teleport, typing
     case dillyDally = "dillydally", lockIn = "lockin", letter, paperPlane = "plane", kamehameha, powerUp = "powerup"
     case coffee, buffering, deploy, contextFull = "contextfull", compact, helloAI = "helloai", shipIt = "shipit"
+    case smoke, mute, unmute
 
     static let tricks: [Action] = [.hop, .flag, .party]
 
@@ -33,6 +34,9 @@ enum Action: String, CaseIterable, Identifiable {
         case .compact: ("Compact", "Compact kontekstu")
         case .helloAI: ("Hello fellow AI", "Hello fellow AI")
         case .shipIt: ("Ship it!", "Ship it!")
+        case .smoke: ("Smoke break", "Palenie petka")
+        case .mute: ("Muted", "Wyciszenie")
+        case .unmute: ("Unmuted", "Odciszenie")
         }
         return language == .pl ? pl : en
     }
@@ -61,6 +65,8 @@ enum Action: String, CaseIterable, Identifiable {
         case .compact: Context.compactDuration
         case .helloAI: HelloAI.duration
         case .shipIt: ShipIt.duration
+        case .smoke: Smoke.duration
+        case .mute, .unmute: Mute.duration
         }
     }
 }

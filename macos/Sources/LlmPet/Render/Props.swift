@@ -184,4 +184,35 @@ extension Art {
         PixelArt(rows: ["..i..", "..i..", "iiyii", "..i..", "..i.."]),
         PixelArt(rows: ["i...i", ".i.i.", "..y..", ".i.i.", "i...i"]),
     ]
+    static let cigarette = PixelArt(rows: ["bbiiiiii", "bbiiiiii"])
+    static let cigaretteLit = [
+        PixelArt(rows: ["bbiiiihq", "bbiiiihf"]),
+        PixelArt(rows: ["bbiiiihf", "bbiiiihq"]),
+    ]
+    static let cigaretteHot = PixelArt(rows: ["bbiiiify", "bbiiiiyf"])
+    static let butt = PixelArt(rows: ["bbif", "bbih"])
+    static let buttFlat = PixelArt(rows: ["bbhhj"])
+    static let lighter = PixelArt(rows: [".hh", "jhh", "aaa", "aaa", "aaa", "aaa"])
+    static let lighterFlame = [
+        PixelArt(rows: [".f.", "fyf", ".f."]),
+        PixelArt(rows: ["..f", "fyf", ".f."]),
+    ]
+    static let smokeRing = PixelArt(rows: ["..hh..", ".hpph.", "hp..ph", "hp..ph", ".hpph.", "..hh.."])
+    static let wisp = PixelArt(rows: [".h", "hp", "h."])
+    static let speaker = PixelArt(rows: [
+        "....kk",
+        "...khk",
+        "kkkhhk",
+        "khhhhk",
+        "khhhhk",
+        "kkkhhk",
+        "...khk",
+        "....kk",
+    ])
+    static let speakerWaves = [
+        PixelArt(rows: ["k.", ".k", ".k", ".k", ".k", "k."]),
+        PixelArt(rows: ["k...", ".k.k", ".k.k", ".k.k", ".k.k", "k..."]),
+    ]
+    static let muteCross = PixelArt(rows: ["q...q", ".q.q.", "..q..", ".q.q.", "q...q"])
+    static let zipperPull = PixelArt(rows: ["hh", "jj", "hh"])
 }

@@ -4,21 +4,22 @@ struct PetView: View {
     let pet: Pet
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1.0 / Double(AppSettings.shared.fps))) { context in
+        TimelineView(.animation(minimumInterval: AppSettings.shared.vsync ? nil : 1.0 / Double(AppSettings.shared.fps))) { context in
             let now = context.date
             PetFrame(
                 pose: Pose(pet: pet, now: now),
                 action: pet.action,
-                t: now.timeIntervalSince(pet.actionStart),
-                clock: now.timeIntervalSinceReferenceDate,
+                t: pet.elapsed(now),
+                clock: pet.time(now),
                 facing: pet.facing,
                 grounded: !pet.held && !pet.falling
             )
             .scaleEffect(pet.scale, anchor: .bottom)
             .frame(width: pet.frameSize.width, height: pet.frameSize.height, alignment: .bottom)
             .onTapGesture { pet.poke() }
+            .contextMenu { PetMenu() }
             .gesture(DragGesture(minimumDistance: 3).onChanged { _ in pet.hold() }.onEnded { _ in pet.release() })
-            .help(tr("Click for a trick, drag to move, hide it from the paw in the menu bar", "Klik = sztuczka, przeciągnij = przenieś, chowasz łapką w pasku menu"))
+            .help(tr("Click for a trick, drag to move, right-click for the menu", "Klik = sztuczka, przeciągnij = przenieś, prawy klik = menu"))
         }
     }
 }

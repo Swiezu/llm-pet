@@ -1,20 +1,59 @@
-import Foundation
+import AppKit
+import IOKit.ps
 import Observation
 
 @MainActor
 @Observable
 final class AppSettings {
     static let shared = AppSettings()
-    static let fpsOptions = [12, 24, 30, 60, 120]
+    static let fpsOptions = [15, 30, 60, 120, 144, 165, 240]
+    static let vsyncFPS = 0
     static let bubbleFonts: ClosedRange<Double> = 10...22
     static let bubbleWidths: ClosedRange<Double> = 160...800
     static let bubbleHeights: ClosedRange<Int> = 2...30
     static let petScales: ClosedRange<Double> = 0.5...2
+    static let speeds: ClosedRange<Double> = 0.25...3
+    static let fastSpeeds: ClosedRange<Double> = 1...5
     private static let palette = ["#FFD9A8", "#B8E1FF", "#C9F2C7", "#F7C6E0", "#E2D4FF", "#FFF3A8", "#3B4A6B", "#7A2E3A"]
 
-    var fps: Int {
-        didSet { UserDefaults.standard.set(fps, forKey: "fps") }
+    var fpsPower: Int {
+        didSet { UserDefaults.standard.set(fpsPower, forKey: "fpsPower") }
     }
+
+    var fpsBattery: Int {
+        didSet { UserDefaults.standard.set(fpsBattery, forKey: "fpsBattery") }
+    }
+
+    var animationSpeed: Double {
+        didSet { UserDefaults.standard.set(animationSpeed, forKey: "animationSpeed") }
+    }
+
+    var fastSpeed: Double {
+        didSet { UserDefaults.standard.set(fastSpeed, forKey: "fastSpeed") }
+    }
+
+    var fastMode: Bool {
+        didSet { UserDefaults.standard.set(fastMode, forKey: "fastMode") }
+    }
+
+    var animationsEnabled: Bool {
+        didSet { UserDefaults.standard.set(animationsEnabled, forKey: "animationsEnabled") }
+    }
+
+    private(set) var onBattery = AppSettings.batteryPowered()
+
+    static var displayFPS: Int { NSScreen.main?.maximumFramesPerSecond ?? 60 }
+
+    static var availableFPS: [Int] { fpsOptions.filter { $0 <= displayFPS } + [vsyncFPS] }
+
+    var vsync: Bool { (onBattery ? fpsBattery : fpsPower) == Self.vsyncFPS }
+
+    var fps: Int {
+        let value = onBattery ? fpsBattery : fpsPower
+        return value == Self.vsyncFPS ? Self.displayFPS : min(value, Self.displayFPS)
+    }
+
+    var speed: Double { fastMode ? fastSpeed : animationSpeed }
 
     var bubbleFont: Double {
         didSet { UserDefaults.standard.set(bubbleFont, forKey: "bubbleFont") }
@@ -33,7 +72,13 @@ final class AppSettings {
     }
 
     var channels: [Channel] {
-        didSet { save() }
+        didSet {
+            save()
+            for channel in channels {
+                guard let old = oldValue.first(where: { $0.id == channel.id }), old.muted != channel.muted else { continue }
+                Pet.shared.perform(channel.muted ? .mute : .unmute)
+            }
+        }
     }
 
     var language: Language? {
@@ -45,8 +90,17 @@ final class AppSettings {
     var main: Channel { channels.first(where: \.isMain) ?? Channel(id: Channel.mainID, name: "Main", color: "#FFFFFF") }
 
     private init() {
-        let fps = UserDefaults.standard.integer(forKey: "fps")
-        self.fps = Self.fpsOptions.contains(fps) ? fps : 30
+        let defaults = UserDefaults.standard
+        let legacy = defaults.integer(forKey: "fps")
+        let fps = legacy > 0 ? Self.nearest(legacy) : 30
+        fpsPower = defaults.object(forKey: "fpsPower").map { _ in Self.nearest(defaults.integer(forKey: "fpsPower")) } ?? fps
+        fpsBattery = defaults.object(forKey: "fpsBattery").map { _ in Self.nearest(defaults.integer(forKey: "fpsBattery")) } ?? fps
+        let speed = defaults.double(forKey: "animationSpeed")
+        animationSpeed = Self.speeds.contains(speed) ? speed : 1
+        let fast = defaults.double(forKey: "fastSpeed")
+        fastSpeed = Self.fastSpeeds.contains(fast) ? fast : 2
+        fastMode = defaults.object(forKey: "fastMode") as? Bool ?? false
+        animationsEnabled = defaults.object(forKey: "animationsEnabled") as? Bool ?? true
         let font = UserDefaults.standard.double(forKey: "bubbleFont")
         bubbleFont = Self.bubbleFonts.contains(font) ? font : 13
         let width = UserDefaults.standard.double(forKey: "bubbleWidth")
@@ -58,6 +112,20 @@ final class AppSettings {
         language = UserDefaults.standard.string(forKey: "language").flatMap(Language.init)
         let stored = UserDefaults.standard.data(forKey: "channels").flatMap { try? JSONDecoder().decode([Channel].self, from: $0) } ?? []
         channels = stored.contains(where: \.isMain) ? stored : [Channel(id: Channel.mainID, name: "Main", color: "#FFFFFF")] + stored
+        if let source = IOPSNotificationCreateRunLoopSource({ _ in
+            MainActor.assumeIsolated { AppSettings.shared.onBattery = AppSettings.batteryPowered() }
+        }, nil)?.takeRetainedValue() {
+            CFRunLoopAddSource(CFRunLoopGetMain(), source, .defaultMode)
+        }
+    }
+
+    private static func nearest(_ fps: Int) -> Int {
+        fps == vsyncFPS ? fps : fpsOptions.min { abs($0 - fps) < abs($1 - fps) } ?? 30
+    }
+
+    private static func batteryPowered() -> Bool {
+        guard let info = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(), let type = IOPSGetProvidingPowerSourceType(info)?.takeUnretainedValue() else { return false }
+        return type as String == kIOPMBatteryPowerKey
     }
 
     func channel(_ key: String?) -> Channel? {

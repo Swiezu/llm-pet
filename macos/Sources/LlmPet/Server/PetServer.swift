@@ -67,7 +67,7 @@ final class PetServer {
         let path = request.path.split(separator: "?").first.map(String.init) ?? request.path
         switch (request.method, path) {
         case ("GET", "/status"):
-            return .json(["enabled": pet.enabled, "action": pet.action.rawValue, "speaking": pet.bubbles.speaking, "bubbles": pet.bubbles.active.count, "queued": pet.bubbles.queued, "fps": settings.fps])
+            return .json(["enabled": pet.enabled, "action": pet.action.rawValue, "speaking": pet.bubbles.speaking, "bubbles": pet.bubbles.active.count, "queued": pet.bubbles.queued, "fps": settings.fps, "vsync": settings.vsync, "animations": settings.animationsEnabled, "speed": settings.speed])
         case ("GET", "/actions"):
             return .json(["actions": Action.allCases.map(Self.describe)])
         case ("GET", "/channels"):

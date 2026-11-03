@@ -14,7 +14,7 @@ struct SettingsView: View {
             } header: {
                 Text(tr("Channels", "Kanały"))
             } footer: {
-                Text(tr("In the API a channel is addressed by name or id. Messages sent to a muted channel are not shown; channels can be muted and unmuted only here.", "W API kanał wskazujesz nazwą albo identyfikatorem. Wiadomości na wyciszony kanał nie są pokazywane; wyciszyć i odciszyć można tylko tutaj."))
+                Text(tr("In the API a channel is addressed by name or id. Messages sent to a muted channel are not shown; channels are muted and unmuted only here, in the menu bar or in the right-click menu on the pet, never through the API.", "W API kanał wskazujesz nazwą albo identyfikatorem. Wiadomości na wyciszony kanał nie są pokazywane; wyciszysz i odciszysz go tylko tutaj, w pasku menu albo w menu pod prawym klikiem na pecie, nigdy przez API."))
                     .foregroundStyle(.secondary)
             }
             Section(tr("Language", "Język")) {
@@ -23,7 +23,7 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
             }
-            Section {
+            Section(tr("Size", "Rozmiar")) {
                 LabeledContent(tr("Pet size", "Rozmiar postaci")) {
                     HStack {
                         Slider(value: $settings.petScale, in: AppSettings.petScales, step: 0.05)
@@ -43,7 +43,9 @@ struct SettingsView: View {
                 .onChange(of: settings.bubbleFont) {
                     if !Pet.shared.bubbles.speaking { Pet.shared.say(tr("This is how bubbles look", "Tak wyglądają dymki"), for: 3) }
                 }
-                LabeledContent(tr("Bubble width", "Szerokość dymku")) {
+            }
+            Section {
+                LabeledContent(tr("Max bubble width", "Maksymalna szerokość dymku")) {
                     HStack {
                         Slider(value: $settings.bubbleWidth, in: AppSettings.bubbleWidths, step: 10)
                         Text("\(Int(settings.bubbleWidth)) pt")
@@ -51,7 +53,7 @@ struct SettingsView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                 }
-                LabeledContent(tr("Bubble height", "Wysokość dymku")) {
+                LabeledContent(tr("Max bubble height", "Maksymalna wysokość dymku")) {
                     HStack {
                         Slider(value: Binding(get: { Double(settings.bubbleLines) }, set: { settings.bubbleLines = Int($0.rounded()) }), in: Double(AppSettings.bubbleHeights.lowerBound)...Double(AppSettings.bubbleHeights.upperBound), step: 1)
                         Text(tr("\(settings.bubbleLines) ln", "\(settings.bubbleLines) l."))
@@ -62,21 +64,56 @@ struct SettingsView: View {
                 .onChange(of: settings.bubbleWidth) { preview() }
                 .onChange(of: settings.bubbleLines) { preview() }
             } header: {
-                Text(tr("Size", "Rozmiar"))
+                Text(tr("Max bubble size", "Maksymalny rozmiar dymku"))
             } footer: {
                 Text(tr("Width and height of a collapsed bubble. Longer messages get \"more\": an expanded bubble shows the whole text, up to twice as wide, and its countdown stops until you collapse it or close it with X.", "Szerokość i wysokość zwiniętego dymku. Dłuższe wiadomości mają \"więcej\": rozwinięty dymek pokazuje cały tekst, do dwóch razy szerzej, a odliczanie stoi, dopóki go nie zwiniesz albo nie zamkniesz X."))
                     .foregroundStyle(.secondary)
             }
-            Section(tr("Animation", "Animacja")) {
-                Picker(tr("Frames per second", "Klatki na sekundę"), selection: $settings.fps) {
-                    ForEach(AppSettings.fpsOptions, id: \.self) { Text("\($0)").tag($0) }
+            Section {
+                LabeledContent(tr("Animation speed", "Prędkość animacji")) {
+                    HStack {
+                        Slider(value: $settings.animationSpeed, in: AppSettings.speeds, step: 0.25)
+                        Text(Self.multiplier(settings.animationSpeed))
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+                LabeledContent(tr("Speed in fast mode", "Prędkość w trybie szybkim")) {
+                    HStack {
+                        Slider(value: $settings.fastSpeed, in: AppSettings.fastSpeeds, step: 0.25)
+                        Text(Self.multiplier(settings.fastSpeed))
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+                Toggle(tr("Fast mode", "Tryb szybki"), isOn: $settings.fastMode)
+                Toggle(tr("Animations", "Animacje"), isOn: $settings.animationsEnabled)
+                Picker(tr("FPS on power", "FPS na zasilaniu"), selection: Self.frames($settings.fpsPower)) {
+                    ForEach(AppSettings.availableFPS, id: \.self) { Text($0 == AppSettings.vsyncFPS ? "VSync" : "\($0)").tag($0) }
                 }
                 .pickerStyle(.segmented)
+                Picker(tr("FPS on battery", "FPS na baterii"), selection: Self.frames($settings.fpsBattery)) {
+                    ForEach(AppSettings.availableFPS, id: \.self) { Text($0 == AppSettings.vsyncFPS ? "VSync" : "\($0)").tag($0) }
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text(tr("Animation", "Animacja"))
+            } footer: {
+                Text(tr("Now: \(settings.onBattery ? "battery" : "power adapter"), \(settings.fps) FPS", "Teraz: \(settings.onBattery ? "bateria" : "zasilanie"), \(settings.fps) FPS"))
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .frame(width: 520)
         .frame(minHeight: 360)
+    }
+
+    private static func frames(_ value: Binding<Int>) -> Binding<Int> {
+        Binding(get: { value.wrappedValue == AppSettings.vsyncFPS ? AppSettings.vsyncFPS : min(value.wrappedValue, AppSettings.displayFPS) }, set: { value.wrappedValue = $0 })
+    }
+
+    private static func multiplier(_ value: Double) -> String {
+        String(format: "%.2g×", value)
     }
 
     private func preview() {

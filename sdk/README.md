@@ -4,7 +4,7 @@ On launch the app starts an HTTP server bound to `127.0.0.1` only (random port) 
 
 | method and path | body | what it does |
 |---|---|---|
-| `GET /status` | | `{enabled, action, speaking, bubbles, queued, fps}` (`bubbles` on screen, `queued` waiting) |
+| `GET /status` | | `{enabled, action, speaking, bubbles, queued, fps, vsync, animations, speed}` (`bubbles` on screen, `queued` waiting; `fps` for the current power source, `animations: false` = switched off by the user, `speed` = current animation speed multiplier) |
 | `POST /say` | `{"text": "...", "channel": "Build", "animation": "party", "seconds": 5, "link": "https://..."}` (everything except `text` is optional) | speech bubble on a channel (main by default), optionally with an animation; line breaks (`\n`, also a literal `\\n`) are kept, text taller than the bubble size from the app settings is cut with "more" and expands on click; `seconds` 1-3600 (default: based on length), `0` = stays until the user closes it with X; `link` = clickable link at the bottom right (URL with a scheme: `https://`, `file://`, `myapp://`, or an absolute path, `~` allowed; checked only syntactically, the app never touches the file until the user clicks); returns `{ok, shown, queued, channel}` (`queued`: 0 = on screen now, otherwise its place in the queue; the animation plays when the bubble appears), `shown: false, muted: true` for a muted channel; 404 unknown channel, 400 unknown animation or a link without a scheme, 409 pet hidden, 429 queue full (20) |
 | `POST /action` | `{"name": "typing"}` | animation only; 409 when hidden |
 | `GET /actions` | | `{actions: [{name, title, seconds}]}` (`seconds: null` = endless) |

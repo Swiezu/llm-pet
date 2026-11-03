@@ -28,6 +28,7 @@ The pet sits in a transparent always-on-top window on every Space. It shows mess
 <tr><td align="center"><img src="docs/animations/kamehameha.gif" width="240" alt="Kamehameha"><br><b>Kamehameha</b> <code>kamehameha</code><br><sub>energy ball and beam</sub></td><td align="center"><img src="docs/animations/powerup.gif" width="240" alt="Power up"><br><b>Power up</b> <code>powerup</code><br><sub>flame aura, golden hair</sub></td><td align="center"><img src="docs/animations/coffee.gif" width="240" alt="Coffee"><br><b>Coffee</b> <code>coffee</code><br><sub>pours, blows, sips</sub></td></tr>
 <tr><td align="center"><img src="docs/animations/buffering.gif" width="240" alt="Buffering"><br><b>Buffering</b> <code>buffering</code><br><sub>spinner, lag spikes, catching up</sub></td><td align="center"><img src="docs/animations/deploy.gif" width="240" alt="Deploy to prod"><br><b>Deploy to prod</b> <code>deploy</code><br><sub>countdown and rocket launch</sub></td><td align="center"><img src="docs/animations/contextfull.gif" width="240" alt="Context full"><br><b>Context full</b> <code>contextfull</code><br><sub>buried in tokens, bar goes red</sub></td></tr>
 <tr><td align="center"><img src="docs/animations/compact.gif" width="240" alt="Compact"><br><b>Compact</b> <code>compact</code><br><sub>stomps tokens into a packed cube</sub></td><td align="center"><img src="docs/animations/helloai.gif" width="240" alt="Hello fellow AI"><br><b>Hello fellow AI</b> <code>helloai</code><br><sub>antenna, LED eyes, signals</sub></td><td align="center"><img src="docs/animations/shipit.gif" width="240" alt="Ship it!"><br><b>Ship it!</b> <code>shipit</code><br><sub>box, ✓ and a little ship</sub></td></tr>
+<tr><td align="center"><img src="docs/animations/smoke.gif" width="240" alt="Smoke break"><br><b>Smoke break</b> <code>smoke</code><br><sub>lights up, smoke rings, stomps the butt</sub></td><td align="center"><img src="docs/animations/mute.gif" width="240" alt="Muted"><br><b>Muted</b> <code>mute</code><br><sub>speaker crossed out, zips its mouth (plays when a channel is muted)</sub></td><td align="center"><img src="docs/animations/unmute.gif" width="240" alt="Unmuted"><br><b>Unmuted</b> <code>unmute</code><br><sub>unzips, sound waves and singing (plays when a channel is unmuted)</sub></td></tr>
 <tr><td align="center"><img src="docs/animations/resize.gif" width="240" alt="Resize"><br><b>Resize</b><br><sub>pet size slider in the settings: strains and grows, squeezes and shrinks</sub></td><td></td><td></td></tr>
 </table>
 
@@ -39,11 +40,12 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 - **Queue**: up to 2 bubbles stacked above the pet, the rest wait their turn and a "+n" badge shows how many.
 - **Duration and links**: every bubble has an X in the corner, with a ring around it counting down until the bubble disappears; `seconds: 0` keeps it until you click X; an optional link (URL, deep link or file path) at the bottom right opens on click.
 - **Long messages**: line breaks are kept; text taller than the bubble gets "more", which smoothly expands it to the full text (up to twice as wide, scrollable when it does not fit on screen), pauses the countdown and shows X; "less" collapses it and the countdown resumes.
-- **Muting only from the app settings**, so neither an LLM nor another app can get around it.
-- **22 animations** triggered from the menu, the API, an SDK or MCP; clicking the pet plays a random trick.
-- **Drag and drop**: grab the pet and move it; on release it settles right where you left it.
+- **Muting only by the user** (settings, menu bar or the right-click menu on the pet), so neither an LLM nor another app can get around it; Clawd plays a mute or unmute animation.
+- **25 animations** triggered from the menu, the API, an SDK or MCP; clicking the pet plays a random trick; animation speed, a fast mode and an animations off switch.
+- **Right-click menu**: right-clicking the pet opens the same menu as the menu bar paw.
+- **Drag and drop**: grab the pet and move it; on release it settles right where you left it, and it remembers the spot after hiding or quitting.
 - **English and Polish** UI, chosen on first launch.
-- **Settings**: language, channels, pet size (50-200%, animated live), bubble text size, bubble width and height and frame rate (12-120 fps).
+- **Settings**: language, channels, pet size (50-200%, animated live), bubble text size, max bubble width and height, animation speed (normal and fast mode), frame rate separately on power and on battery (15, 30, 60, 120, 144… up to what the display supports, or VSync).
 - **Local HTTP API** on `127.0.0.1` only, token protected, with JS, Swift and shell SDKs and an MCP server.
 - **DEBUG menu** to preview animations, texts and channel colors.
 
@@ -67,10 +69,12 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 
 ## Usage
 
-| menu bar (paw) | what it does |
+| menu bar (paw) or right-click on the pet | what it does |
 |---|---|
 | Show / Hide pet | showing starts with the teleport |
-| Settings… (⌘,) | language, channels (name, color, mute, delete), pet size, bubble text size, width and height, frame rate |
+| Settings… (⌘,) | language, channels (name, color, mute, delete), pet size, bubble text size, max bubble width and height, animation speed, VSync, frame rate on power and on battery |
+| Animations / Fast mode | switches: animations off (the pet just stands still), fast mode (the fast speed from the settings) |
+| Channels | one switch per channel: on = shown, off = muted |
 | DEBUG ANIMATION / TEXT / CHANNEL | preview animations, texts and channel colors |
 | Quit (⌘Q) | |
 
