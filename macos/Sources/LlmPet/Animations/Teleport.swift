@@ -2,6 +2,9 @@ import SwiftUI
 
 enum Teleport {
     static let duration = 2.8
+    static let outDuration = 2.1
+    static let outX: CGFloat = -92
+    static let outUp: CGFloat = 50
     static let portalX: CGFloat = -95
     static let portalUp: CGFloat = 175
     static let radius = CGSize(width: 16, height: 46)
@@ -12,20 +15,25 @@ enum Teleport {
         var ring: CGFloat
         var spark: CGFloat
         var opacity = 1.0
+        var x = Teleport.portalX
+        var up = Teleport.portalUp
     }
 
-    static func portal(_ t: TimeInterval) -> Portal? {
-        let back = { (p: CGFloat) -> CGFloat in 1 + 2.7 * pow(p - 1, 3) + 1.7 * pow(p - 1, 2) }
+    static func back(_ p: CGFloat) -> CGFloat {
+        1 + 2.7 * pow(p - 1, 3) + 1.7 * pow(p - 1, 2)
+    }
+
+    static func portal(_ t: TimeInterval, closing: TimeInterval = 0.95, x: CGFloat = portalX, up: CGFloat = portalUp) -> Portal? {
         switch t {
-        case ..<0.2: return Portal(ring: 0, spark: CGFloat(t / 0.2))
-        case ..<0.5: return Portal(ring: back(CGFloat((t - 0.2) / 0.3)), spark: 1 - 0.5 * CGFloat((t - 0.2) / 0.3))
-        case ..<0.95: return Portal(ring: 1, spark: 0.5)
-        case ..<1.2:
-            let q = CGFloat((t - 0.95) / 0.25)
-            return Portal(ring: 1 - q * q, spark: 0.5 + 0.5 * q)
-        case ..<1.4:
-            let q = (t - 1.2) / 0.2
-            return Portal(ring: 0, spark: 1 + 0.6 * CGFloat(q), opacity: 1 - q)
+        case ..<0.2: return Portal(ring: 0, spark: CGFloat(t / 0.2), x: x, up: up)
+        case ..<0.5: return Portal(ring: back(CGFloat((t - 0.2) / 0.3)), spark: 1 - 0.5 * CGFloat((t - 0.2) / 0.3), x: x, up: up)
+        case ..<closing: return Portal(ring: 1, spark: 0.5, x: x, up: up)
+        case ..<(closing + 0.25):
+            let q = CGFloat((t - closing) / 0.25)
+            return Portal(ring: 1 - q * q, spark: 0.5 + 0.5 * q, x: x, up: up)
+        case ..<(closing + 0.45):
+            let q = (t - closing - 0.25) / 0.2
+            return Portal(ring: 0, spark: 1 + 0.6 * CGFloat(q), opacity: 1 - q, x: x, up: up)
         default: return nil
         }
     }
@@ -33,6 +41,7 @@ enum Teleport {
 
 extension Pose {
     mutating func teleport(t: TimeInterval, clock: TimeInterval) {
+        portal = Teleport.portal(t)
         switch t {
         case ..<0.55:
             hidden = true
@@ -86,6 +95,42 @@ extension Pose {
         default:
             dx = 5 * CGFloat(1 - (t - 2.55) / 0.25)
             eyes = .happy
+        }
+    }
+}
+
+extension Pose {
+    mutating func portalOut(t: TimeInterval, clock: TimeInterval) {
+        portal = Teleport.portal(t, closing: 1.4, x: Teleport.outX, up: Teleport.outUp)
+        flip = true
+        switch t {
+        case ..<0.5:
+            look = 0.5
+            eyes = .wide
+            exclaim = t > 0.22
+        case ..<0.8:
+            let q = CGFloat((t - 0.5) / 0.3)
+            dx = 4 * q
+            sx = 1 + 0.1 * q
+            sy = 1 - 0.14 * q
+            eyes = .happy
+            left = .tucked
+            right = .tucked
+        case ..<1.2:
+            let p = CGFloat((t - 0.8) / 0.4)
+            dx = 4 - 150 * p
+            lift = 24 * sin(.pi * min(1, p * 1.2))
+            mask = Teleport.outX
+            tilt = Double(12 * cos(.pi * p))
+            tiltAnchor = .center
+            sx = 0.94
+            sy = 1.08
+            eyes = .happy
+            left = .diagUp
+            right = .diagUp
+            legLength = 1.5
+        default:
+            hidden = true
         }
     }
 }

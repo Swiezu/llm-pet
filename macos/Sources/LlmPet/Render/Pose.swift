@@ -43,6 +43,20 @@ struct Pose {
         var behind = false
     }
 
+    struct Pillar {
+        var width: CGFloat
+        var bottom: CGFloat = 0
+        var ring: CGFloat = 0
+        var motes: CGFloat = 0
+    }
+
+    struct Cloud {
+        var progress: CGFloat
+        var size: CGFloat = 1
+        var x: CGFloat = 0
+        var up: CGFloat = 28
+    }
+
     struct Beam {
         var thickness: CGFloat
         var length: CGFloat
@@ -97,4 +111,9 @@ struct Pose {
     var sweat = false
     var items: [Item] = []
     var shockwave: CGFloat?
+    var portal: Teleport.Portal?
+    var pillar: Pillar?
+    var cloud: Cloud?
+    var dissolve: CGFloat?
+    var glow: Double = 0
 }

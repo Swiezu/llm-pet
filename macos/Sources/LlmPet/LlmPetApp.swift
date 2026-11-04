@@ -81,6 +81,8 @@ struct PetMenu: View {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var quitting = false
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         let arguments = CommandLine.arguments
         if let index = arguments.firstIndex(of: "--dump-frames"), index + 1 < arguments.count {
@@ -97,6 +99,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             Pet.shared.restore()
         }
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard !quitting else { return .terminateNow }
+        quitting = true
+        Pet.shared.leave { Task { @MainActor in NSApp.reply(toApplicationShouldTerminate: true) } }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(10))
+            NSApp.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
 
     func applicationWillTerminate(_ notification: Notification) {

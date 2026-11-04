@@ -29,6 +29,9 @@ The pet sits in a transparent always-on-top window on every Space. It shows mess
 <tr><td align="center"><img src="docs/animations/compact.gif" width="240" alt="Compact"><br><b>Compact</b> <code>compact</code><br><sub>stomps tokens into a packed cube</sub></td><td align="center"><img src="docs/animations/helloai.gif" width="240" alt="Hello fellow AI"><br><b>Hello fellow AI</b> <code>helloai</code><br><sub>antenna, LED eyes, signals</sub></td><td align="center"><img src="docs/animations/shipit.gif" width="240" alt="Ship it!"><br><b>Ship it!</b> <code>shipit</code><br><sub>box, ✓ and a little ship</sub></td></tr>
 <tr><td align="center"><img src="docs/animations/smoke.gif" width="240" alt="Smoke break"><br><b>Smoke break</b> <code>smoke</code><br><sub>lights up, smoke rings, stomps the butt</sub></td><td align="center"><img src="docs/animations/mute.gif" width="240" alt="Muted"><br><b>Muted</b> <code>mute</code><br><sub>speaker crossed out, zips its mouth (plays when a channel is muted)</sub></td><td align="center"><img src="docs/animations/unmute.gif" width="240" alt="Unmuted"><br><b>Unmuted</b> <code>unmute</code><br><sub>unzips, sound waves and singing (plays when a channel is unmuted)</sub></td></tr>
 <tr><td align="center"><img src="docs/animations/chill.gif" width="240" alt="Chill"><br><b>Chill</b> <code>chill</code><br><sub>rolls a thick one, lights it, big clouds, red eyes and giggles</sub></td><td align="center"><img src="docs/animations/resize.gif" width="240" alt="Resize"><br><b>Resize</b><br><sub>pet size slider in the settings: strains and grows, squeezes and shrinks</sub></td><td align="center"><img src="docs/animations/lunch.gif" width="240" alt="Lunch break"><br><b>Lunch break</b> <code>lunch</code><br><sub>tummy growls, a burger in four bites, soda, burp</sub></td></tr>
+<tr><td align="center"><img src="docs/animations/beamdown.gif" width="240" alt="Beam down"><br><b>Beam down</b> <code>beamdown</code><br><sub>a pillar of light drops, Claude materializes pixel by pixel</sub></td><td align="center"><img src="docs/animations/poofin.gif" width="240" alt="Poof in"><br><b>Poof in</b> <code>poofin</code><br><sub>a puff of smoke, ta-da</sub></td><td align="center"><img src="docs/animations/flyin.gif" width="240" alt="Fly in"><br><b>Fly in</b> <code>flyin</code><br><sub>a little Clawd bird lands and poofs into Claude</sub></td></tr>
+<tr><td align="center"><img src="docs/animations/portalout.gif" width="240" alt="Into the portal"><br><b>Into the portal</b> <code>portalout</code><br><sub>a ground portal opens, Claude leaps in</sub></td><td align="center"><img src="docs/animations/beamup.gif" width="240" alt="Beam up"><br><b>Beam up</b> <code>beamup</code><br><sub>glows, stretches and dissolves up a pillar of light</sub></td><td align="center"><img src="docs/animations/poof.gif" width="240" alt="Poof"><br><b>Poof</b> <code>poof</code><br><sub>a wave, a crouch and gone in a puff of smoke</sub></td></tr>
+<tr><td align="center"><img src="docs/animations/flyaway.gif" width="240" alt="Fly away"><br><b>Fly away</b> <code>flyaway</code><br><sub>turns into a little bird and flies off</sub></td></tr>
 </table>
 
 Every animation uses the same sprite on a shared pixel grid; props (portal, mug, rocket, box…) are pixel art in the same style.
@@ -42,7 +45,7 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 - **Duration and links**: every bubble has an X in the corner, with a ring around it counting down until the bubble disappears; `seconds: 0` keeps it until you click X; an optional link (URL, deep link or file path) at the bottom right opens on click.
 - **Long messages**: line breaks are kept; text taller than the bubble gets "more", which smoothly expands it to the full text (up to twice as wide, scrollable when it does not fit on screen), pauses the countdown and shows X; "less" collapses it and the countdown resumes.
 - **Muting only by the user** (settings, menu bar or the right-click menu on the pet), so neither an LLM nor another app can get around it; Clawd plays a mute or unmute animation.
-- **27 animations** triggered from the menu, the API, an SDK or MCP; clicking the pet plays a random trick; animation speed, a fast mode and an animations off switch.
+- **34 animations** triggered from the menu, the API, an SDK or MCP; clicking the pet plays a random trick; animation speed, a fast mode and an animations off switch.
 - **Right-click menu**: right-clicking the pet opens the same menu as the menu bar paw.
 - **Drag and drop**: grab the pet and move it; on release it settles right where you left it, and it remembers the spot after hiding or quitting.
 - **English and Polish** UI, chosen on first launch.
@@ -72,12 +75,12 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 
 | menu bar (paw) or right-click on the pet | what it does |
 |---|---|
-| Show / Hide pet | showing starts with the teleport |
+| Show / Hide pet | showing plays a random entrance (portal, pillar of light, poof, bird), hiding a random exit |
 | Settings… (⌘,) | language, channels (name, color, mute, delete), pet size, bubble text size, max bubble width and height, animation speed, VSync, frame rate on power and on battery |
 | Animations / Fast mode | switches: animations off (the pet just stands still), fast mode (the fast speed from the settings) |
 | Channels | one switch per channel: on = shown, off = muted |
 | DEBUG ANIMATION / TEXT / CHANNEL | preview animations, texts and channel colors |
-| Quit (⌘Q) | |
+| Quit (⌘Q) | plays a random exit first |
 
 ### From an LLM (MCP)
 ```bash

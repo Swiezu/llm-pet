@@ -36,6 +36,7 @@ final class Pet {
     @ObservationIgnored private var lastTick = Date.now
     @ObservationIgnored private var anchor = (date: Date.now, time: TimeInterval(0), speed: AppSettings.shared.speed)
     @ObservationIgnored private var scaleSpeed: CGFloat = 0
+    @ObservationIgnored private var leaving: (() -> Void)?
 
     var frameSize: CGSize { CGSize(width: Self.size.width * scale, height: Self.size.height * scale) }
 
@@ -63,30 +64,45 @@ final class Pet {
     func setEnabled(_ value: Bool) {
         enabled = value
         UserDefaults.standard.set(enabled, forKey: "petEnabled")
-        enabled ? show() : hide()
+        enabled ? show() : leave()
+    }
+
+    func leave(then done: @escaping () -> Void = {}) {
+        if let leaving {
+            self.leaving = { leaving(); done() }
+            return
+        }
+        guard window != nil, AppSettings.shared.animationsEnabled, !held, !falling, let exit = Action.exits.randomElement() else {
+            hide()
+            done()
+            return
+        }
+        bubbles.close()
+        leaving = done
+        start(exit)
     }
 
     @discardableResult
     func say(_ message: String, title: String? = nil, subtitle: String? = nil, style: BubbleStyle = .bubble, for seconds: TimeInterval? = nil, link: URL? = nil, animation: Action? = nil, on channel: Channel = AppSettings.shared.main) -> Int? {
-        guard enabled, !channel.muted else { return nil }
+        guard enabled, leaving == nil, !channel.muted else { return nil }
         return bubbles.say(message, title: title, subtitle: subtitle, style: style, for: seconds, link: link, background: channel.background, foreground: channel.foreground, heading: channel.heading, accent: channel.accent, onShow: animation.map { action in { [weak self] in self?.perform(action) } })
     }
 
     func perform(_ next: Action) {
-        guard enabled, !held, !falling, AppSettings.shared.animationsEnabled || next == .idle else { return }
+        guard enabled, leaving == nil, !held, !falling, AppSettings.shared.animationsEnabled || next == .idle else { return }
         if next == .walk, let screen = screen?.visibleFrame {
             target = .random(in: (screen.minX - Self.edge * scale)...(screen.maxX - frameSize.width + Self.edge * scale))
         }
-        if next == .teleport { facing = 1 }
         start(next)
     }
 
     func poke() {
-        guard AppSettings.shared.animationsEnabled else { return }
+        guard AppSettings.shared.animationsEnabled, leaving == nil else { return }
         start(Action.tricks.randomElement() ?? .hop)
     }
 
     func hold() {
+        guard leaving == nil else { return }
         let mouse = NSEvent.mouseLocation
         if !held {
             held = true
@@ -101,6 +117,7 @@ final class Pet {
     }
 
     func release() {
+        guard held else { return }
         held = false
         falling = true
         fall = 0
@@ -109,6 +126,11 @@ final class Pet {
     }
 
     private func show() {
+        if leaving != nil {
+            leaving = nil
+            perform(Action.entrances.randomElement() ?? .teleport)
+            return
+        }
         guard window == nil else { return }
         scale = CGFloat(AppSettings.shared.petScale)
         scaleSpeed = 0
@@ -123,7 +145,7 @@ final class Pet {
         window = panel
         lastTick = .now
         if AppSettings.shared.animationsEnabled {
-            perform(.teleport)
+            perform(Action.entrances.randomElement() ?? .teleport)
         } else {
             start(.idle)
             say(DebugTexts.greeting(AppSettings.shared.lang))
@@ -146,6 +168,7 @@ final class Pet {
     }
 
     private func start(_ next: Action) {
+        if next == .teleport || next == .portalOut { facing = 1 }
         action = next
         actionStart = time(.now)
         if calm { calm = false }
@@ -153,8 +176,14 @@ final class Pet {
 
     private func finish() {
         let ended = action
+        if let leaving {
+            self.leaving = nil
+            hide()
+            leaving()
+            return
+        }
         start(.idle)
-        if ended == .teleport { say(DebugTexts.greeting(AppSettings.shared.lang)) }
+        if Action.entrances.contains(ended) { say(DebugTexts.greeting(AppSettings.shared.lang)) }
     }
 
     private func tick() {
@@ -164,7 +193,7 @@ final class Pet {
         lastTick = now
         let rate = AppSettings.shared.speed
         if rate != anchor.speed { anchor = (now, time(now), rate) }
-        if !AppSettings.shared.animationsEnabled, action != .idle { start(.idle) }
+        if !AppSettings.shared.animationsEnabled, action != .idle { leaving == nil ? start(.idle) : finish() }
         let floor = screen.minY
         resize(now, dt: k / 60)
         bubbles.update(now)

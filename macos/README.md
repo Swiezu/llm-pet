@@ -6,7 +6,7 @@ A pixel Clawd (8×6 body, 1×1 eyes, 2×2 arms, 4 legs) in its own transparent w
 Right-clicking the pet opens the same menu (`PetMenu`).
 | item | what it does |
 |---|---|
-| Show / Hide pet | showing starts with the teleport and a greeting; state in `UserDefaults` (`petEnabled`) |
+| Show / Hide pet | showing plays a random entrance from `Action.entrances` and a greeting, hiding a random exit from `Action.exits` (the window stays until it ends); state in `UserDefaults` (`petEnabled`) |
 | Settings… (⌘,) | settings window |
 | Animations | switch; off = no animations at all (API, menu and click are ignored, no teleport, no blinking), the pet stands still (`animationsEnabled`) |
 | Fast mode | switch; animations run at the fast speed from the settings (`fastMode`) |
@@ -14,7 +14,7 @@ Right-clicking the pet opens the same menu (`PetMenu`).
 | DEBUG ANIMATION | plays the chosen animation |
 | DEBUG TEXT | shows a text from the test pool (`Pet/DebugTexts.swift`) on the main channel; at the bottom a bubble that stays until closed with a link, a 10 s bubble with a folder link, a 10 s bubble with a title and subtitle, a conversation (left and right), a long bubble to expand (30 s and until closed) and 5 bubbles at once (queue) |
 | DEBUG CHANNEL | a random test text on the chosen channel (checks color and muting) |
-| Quit (⌘Q) | |
+| Quit (⌘Q) | plays a random exit first (`applicationShouldTerminate` answers `.terminateLater`, with a 10 s fallback); a hidden pet quits at once |
 
 ## Settings
 - **Language**: English or Polish; asked once on first launch, changeable later. Applies to the menu, settings, animation titles, test texts and the greeting. The API, MCP and SDKs are always in English.
@@ -56,6 +56,13 @@ Speech bubble (separate window, keeps to screen edges, flips below the head when
 | `mute` | a speaker pops up above its head, gets crossed out in red, Claude covers its mouth and zips it shut, nods; plays when a channel is muted |
 | `unmute` | the crossed out speaker, Claude unzips its mouth, the cross disappears, sound waves and singing notes, a little dance; plays when a channel is unmuted |
 | `shipit` | Ship it!: packs code into a box, tapes it, stamps a green ✓, a little ship sails in, the box lands on deck and sails away, Claude salutes |
+| `beamdown` | entrance: a thin beam drops from the sky and widens into a pillar of light (`Beaming`), Claude materializes top down pixel by pixel (`Pose.dissolve`), glowing (`Pose.glow`), lands, looks around, waves |
+| `poofin` | entrance: a spark, a puff of smoke (`Pose.cloud`) with sparkles, Claude appears inside it, a squash, a ta-da hop |
+| `flyin` | entrance: a little coral Clawd bird flies in, lands, hops, poofs into Claude, who shakes off a feather |
+| `portalout` | exit: a portal opens on the ground on the left, Claude turns, crouches and leaps in (the part already inside is hidden), the portal collapses into a spark |
+| `beamup` | exit: the pillar of light comes down, Claude raises its paws, glows white, stretches and dissolves into pixels up the beam, the beam narrows and leaves, a sparkle in the sky |
+| `poof` | exit: a wave, a crouch, a little jump and gone in a puff of smoke with sparkles |
+| `flyaway` | exit: "!", a jump, a puff of smoke, Claude turns into a little bird that flies off to the top right, a feather floats down |
 
 All animations use the same sprite on the same pixel grid (`Style.unit`); props (envelope, sheet, plane, bulb, portal, rocket, mug…) are pixel art in half sprite pixels (`Render/PixelArt.swift`, `Render/Props.swift`). The pet window is 360×320 pt to fit the portal, beams and flights.
 
@@ -75,7 +82,7 @@ Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir
 | directory / file | what |
 |---|---|
 | `LlmPetApp.swift` | app entry, menu bar menu with the DEBUG items, first launch language choice |
-| `Pet/Pet.swift` | pet state, window, movement loop (walk, drop, drag), teleport on show, spring scaling to the size from the settings |
+| `Pet/Pet.swift` | pet state, window, movement loop (walk, drop, drag), entrance on show and exit on hide or quit, spring scaling to the size from the settings |
 | `Pet/Action.swift` | animations: API name, localized title, duration, click tricks |
 | `Pet/DebugTexts.swift` | test texts and the greeting (English and Polish) |
 | `Pet/FrameDump.swift` | `--dump-frames`: animation frame sheets as PNG |
@@ -86,7 +93,7 @@ Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir
 | `Render/Pose.swift` | one frame: eyes, arms, props, offsets, scale, legs, scene items |
 | `Render/SpriteView.swift` | draws Clawd from a `Pose` (Canvas) |
 | `Render/PetView.swift` | `PetView` (frame clock from settings, gestures) and `PetFrame` (one frame: shadow, effects, sprite, portal mask, flying props) |
-| `Render/Effects.swift` | effects around the pet: confetti, sleep "z", portal, flying envelope and plane, beam, flame aura, shockwave, scene items |
+| `Render/Effects.swift` | effects around the pet: confetti, sleep "z", portal, pillar of light, smoke puff, dissolve mask, flying envelope and plane, beam, flame aura, shockwave, scene items |
 | `Render/PixelArt.swift`, `Render/Props.swift` | pixel art props and their palette |
 | `Render/Style.swift` | pixel size, canvas, colors |
 | `Animations/Choreography.swift` | picks the pose for the pet state and action |

@@ -50,14 +50,13 @@ struct SleepView: View {
 }
 
 struct PortalView: View {
-    let t: TimeInterval
+    let portal: Teleport.Portal
     let clock: TimeInterval
 
     var body: some View {
         Canvas { context, size in
-            guard let portal = Teleport.portal(t) else { return }
             let pixel = Style.unit / 2
-            let center = CGPoint(x: size.width / 2 + Teleport.portalX, y: size.height - Teleport.portalUp)
+            let center = CGPoint(x: size.width / 2 + portal.x, y: size.height - portal.up)
             let a = Teleport.radius.width * portal.ring
             let b = Teleport.radius.height * portal.ring
             if portal.ring > 0.05 {
@@ -92,6 +91,121 @@ struct PortalView: View {
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+struct PillarView: View {
+    let pillar: Pose.Pillar
+    let dx: CGFloat
+    let clock: TimeInterval
+    var front = false
+
+    var body: some View {
+        Canvas { context, size in
+            let pixel = Style.unit / 2
+            let center = ((size.width / 2 + dx) / pixel).rounded() * pixel
+            let bottom = size.height - pillar.bottom
+            let columns = max(1, Int(pillar.width / pixel))
+            guard bottom > 0 else { return }
+            for gx in -columns..<columns where !front {
+                let r = abs(CGFloat(gx) + 0.5) / CGFloat(columns)
+                let flicker = (Int(clock / 0.05) + gx * 3) % 7 == 0
+                let color: Color = switch r {
+                case 0.8...: flicker ? Style.light : Style.coral
+                case 0.5...: Style.light
+                case 0.2...: Style.ivory
+                default: .white
+                }
+                let opacity = r >= 0.8 ? 0.45 : r >= 0.5 ? 0.5 : 0.6
+                context.fill(Path(CGRect(x: center + CGFloat(gx) * pixel, y: 0, width: pixel, height: bottom)), with: .color(color.opacity(opacity)))
+            }
+            if front, columns > 2 {
+                let scroll = CGFloat((clock * 140).truncatingRemainder(dividingBy: 28))
+                var y = pillar.motes < 0 ? scroll : 28 - scroll
+                while y < bottom {
+                    context.fill(Path(CGRect(x: center - CGFloat(columns - 1) * pixel, y: (y / pixel).rounded() * pixel, width: CGFloat(2 * columns - 2) * pixel, height: pixel)), with: .color(.white.opacity(0.3)))
+                    y += 28
+                }
+            }
+            if front, pillar.motes != 0 {
+                for mote in 0..<16 {
+                    let phase = CGFloat((clock * 0.9 + Double(mote) * 0.37).truncatingRemainder(dividingBy: 1))
+                    let y = pillar.motes > 0 ? bottom * (1 - phase) : bottom * phase
+                    let x = center + CGFloat((mote * 37) % (2 * columns + 1) - columns) * pixel * 0.85
+                    context.fill(Path(CGRect(x: (x / pixel).rounded() * pixel, y: (y / pixel).rounded() * pixel, width: pixel, height: pixel)), with: .color((mote % 3 == 0 ? Style.gold[2] : .white).opacity(Double(abs(pillar.motes) * sin(.pi * phase)))))
+                }
+            }
+            if !front, pillar.ring > 0, pillar.bottom <= 0 {
+                let a = pillar.width * (1.1 + 0.5 * pillar.ring)
+                for gy in -2...2 {
+                    let half = a * sqrt(1 - pow(CGFloat(gy) / 2.6, 2))
+                    let cells = Int(half / pixel)
+                    context.fill(Path(CGRect(x: center - CGFloat(cells) * pixel, y: size.height - 4 + CGFloat(gy) * pixel, width: CGFloat(2 * cells) * pixel, height: pixel)), with: .color((abs(gy) == 2 ? Style.light : Style.ivory).opacity(Double(0.7 * pillar.ring))))
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+struct CloudView: View {
+    let cloud: Pose.Cloud
+    let facing: CGFloat
+
+    var body: some View {
+        Canvas { context, size in
+            let pixel = Style.unit / 2
+            let p = cloud.progress
+            let grow = 1 - pow(1 - min(1, p / 0.2), 3)
+            let late = max(0, (p - 0.55) / 0.45)
+            let fade = Double(1 - late)
+            let center = CGPoint(x: size.width / 2 + cloud.x * facing, y: size.height - cloud.up - 10 * p)
+            let spread = cloud.size * (8 + 18 * grow)
+            for index in 0...7 {
+                let angle = Double(index) * 2 * .pi / 7 + 0.3
+                let middle = index == 7
+                let rise = 6 * late * CGFloat(index % 3)
+                let center = middle ? center : CGPoint(x: center.x + 1.25 * spread * CGFloat(cos(angle)), y: center.y + 0.8 * spread * CGFloat(sin(angle)) - rise)
+                let base: CGFloat = middle ? 17 : 11 + 4 * CGFloat(index % 3)
+                let radius = base * cloud.size * grow * (1 - 0.5 * late)
+                let cells = Int(radius / pixel)
+                guard cells > 0 else { continue }
+                let origin = CGPoint(x: (center.x / pixel).rounded() * pixel, y: (center.y / pixel).rounded() * pixel)
+                for gy in -cells...cells {
+                    for gx in -cells...cells {
+                        let r = sqrt(CGFloat(gx * gx + gy * gy)) / CGFloat(cells)
+                        guard r <= 1 else { continue }
+                        let color: Color = r > 0.78 ? Style.metal : gx + gy < -cells / 2 ? Style.ivory : Style.smoke
+                        context.fill(Path(CGRect(x: origin.x + CGFloat(gx) * pixel, y: origin.y + CGFloat(gy) * pixel, width: pixel, height: pixel)), with: .color(color.opacity(fade)))
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+struct DissolveMask: View {
+    let amount: CGFloat
+    let dx: CGFloat
+    let lift: CGFloat
+
+    var body: some View {
+        Canvas { context, size in
+            let pixel = Style.unit / 2
+            let width = Style.canvas.width * Style.unit
+            let left = size.width / 2 + dx - width / 2
+            let bottom = size.height - lift + 0.5 * Style.unit
+            let rows = Int(Style.canvas.height * Style.unit * 1.4 / pixel)
+            for gy in 0..<rows {
+                let height = min(1, CGFloat(gy) / 17)
+                for gx in 0..<Int(width / pixel) {
+                    let noise = CGFloat(abs(sin(Double(gx) * 12.9898 + Double(gy) * 78.233) * 43758.5453).truncatingRemainder(dividingBy: 1))
+                    guard 0.55 * noise + 0.45 * height >= amount * 1.02 else { continue }
+                    context.fill(Path(CGRect(x: left + CGFloat(gx) * pixel, y: bottom - CGFloat(gy + 1) * pixel, width: pixel, height: pixel)), with: .color(.white))
+                }
+            }
+        }
     }
 }
 

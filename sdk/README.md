@@ -11,7 +11,7 @@ On launch the app starts an HTTP server bound to `127.0.0.1` only (random port) 
 | `GET /channels` | | `{channels: [{id, name, color, muted, main}]}` |
 | `POST /channels` | `{"name": "Build", "color": "#3B4A6B"}` (`color` optional) | new channel, 201 `{channel}`; 409 when the name is taken |
 | `DELETE /channels/<id or name>` | | deletes a channel; 400 for the main one |
-| `POST /show`, `POST /hide` | | show (with the teleport) or hide the pet |
+| `POST /show`, `POST /hide` | | show (with a random entrance) or hide the pet (with a random exit) |
 
 At most 2 bubbles are on screen, stacked above the pet (the oldest nearest to it); new ones wait in a queue and the outer bubble shows a "+n" badge with the number waiting. Every bubble has an X in its top right corner that closes it; with a duration the X sits inside a ring that empties until the bubble disappears, a bubble with `seconds: 0` stays until the X is clicked. Clicking the link opens it (`NSWorkspace`: browser, Finder, the app that owns the scheme) and closes the bubble.
 

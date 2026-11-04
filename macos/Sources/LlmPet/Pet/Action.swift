@@ -5,8 +5,12 @@ enum Action: String, CaseIterable, Identifiable {
     case dillyDally = "dillydally", lockIn = "lockin", letter, paperPlane = "plane", kamehameha, powerUp = "powerup"
     case coffee, buffering, deploy, contextFull = "contextfull", compact, helloAI = "helloai", shipIt = "shipit"
     case smoke, chill, lunch, mute, unmute
+    case beamDown = "beamdown", poofIn = "poofin", flyIn = "flyin"
+    case portalOut = "portalout", beamUp = "beamup", poof, flyAway = "flyaway"
 
     static let tricks: [Action] = [.hop, .flag, .party]
+    static let entrances: [Action] = [.teleport, .beamDown, .poofIn, .flyIn]
+    static let exits: [Action] = [.portalOut, .beamUp, .poof, .flyAway]
 
     var id: String { rawValue }
 
@@ -39,6 +43,13 @@ enum Action: String, CaseIterable, Identifiable {
         case .lunch: ("Lunch break", "Przerwa na szamę")
         case .mute: ("Muted", "Wyciszenie")
         case .unmute: ("Unmuted", "Odciszenie")
+        case .beamDown: ("Beam down", "Słup światła (wejście)")
+        case .poofIn: ("Poof in", "Puf! (wejście)")
+        case .flyIn: ("Fly in", "Przylot ptaszkiem")
+        case .portalOut: ("Into the portal", "Skok w portal")
+        case .beamUp: ("Beam up", "Słup światła (wyjście)")
+        case .poof: ("Poof", "Puf! (ulotnienie się)")
+        case .flyAway: ("Fly away", "Odlot ptaszkiem")
         }
         return language == .pl ? pl : en
     }
@@ -71,6 +82,13 @@ enum Action: String, CaseIterable, Identifiable {
         case .chill: Smoke.chillDuration
         case .lunch: Lunch.duration
         case .mute, .unmute: Mute.duration
+        case .beamDown: Beaming.downDuration
+        case .poofIn: Poof.inDuration
+        case .flyIn: Bird.inDuration
+        case .portalOut: Teleport.outDuration
+        case .beamUp: Beaming.upDuration
+        case .poof: Poof.outDuration
+        case .flyAway: Bird.awayDuration
         }
     }
 }

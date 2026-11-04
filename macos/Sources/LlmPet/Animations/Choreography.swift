@@ -32,6 +32,13 @@ extension Pose {
         case .lunch: lunch(t: t, clock: clock)
         case .mute: mute(t: t, clock: clock)
         case .unmute: unmute(t: t, clock: clock)
+        case .beamDown: beamDown(t: t, clock: clock)
+        case .poofIn: poofIn(t: t, clock: clock)
+        case .flyIn: flyIn(t: t, clock: clock)
+        case .portalOut: portalOut(t: t, clock: clock)
+        case .beamUp: beamUp(t: t, clock: clock)
+        case .poof: poof(t: t, clock: clock)
+        case .flyAway: flyAway(t: t, clock: clock)
         }
     }
 

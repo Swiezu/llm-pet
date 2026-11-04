@@ -233,4 +233,36 @@ extension Art {
     ]
     static let muteCross = PixelArt(rows: ["q...q", ".q.q.", "..q..", ".q.q.", "q...q"])
     static let zipperPull = PixelArt(rows: ["hh", "jj", "hh"])
+    static let bird = [
+        PixelArt(rows: [
+            "....dd......",
+            "....dcd.....",
+            ".....dcd....",
+            "..ccccccccc.",
+            ".ccccccckcyy",
+            "cccccccccc..",
+            ".lcccccccc..",
+            "...k...k....",
+        ]),
+        PixelArt(rows: [
+            "............",
+            "............",
+            "............",
+            "..ccccccccc.",
+            ".cddddcckcyy",
+            "cccccccccc..",
+            ".lcccccccc..",
+            "...k...k....",
+        ]),
+        PixelArt(rows: [
+            "............",
+            "............",
+            "............",
+            "..ccccccccc.",
+            ".ccccccckcyy",
+            "cccdddcccc..",
+            ".lccdcdccc..",
+            "....dd.k....",
+        ]),
+    ]
 }
