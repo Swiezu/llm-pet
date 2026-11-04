@@ -15,6 +15,7 @@ struct LlmPetApp: App {
 struct PetMenu: View {
     private let pet = Pet.shared
     @Bindable private var settings = AppSettings.shared
+    @Bindable private var debug = DebugBubble.shared
 
     var body: some View {
         Button(pet.enabled ? tr("Hide pet", "Schowaj peta") : tr("Show pet", "Pokaż peta")) { pet.toggle() }
@@ -31,44 +32,38 @@ struct PetMenu: View {
         }
         Divider()
         Menu("DEBUG ANIMATION") {
-            ForEach(Action.allCases) { action in
-                Button(action.title(settings.lang)) { pet.perform(action) }
+            ForEach(Action.Category.allCases) { category in
+                Menu(category.title(settings.lang)) {
+                    ForEach(category.actions) { action in
+                        Button(action.title(settings.lang)) { pet.perform(action) }
+                    }
+                }
             }
         }
         .disabled(!pet.enabled)
         Menu("DEBUG TEXT") {
-            ForEach(DebugTexts.all(settings.lang), id: \.self) { text in
-                Button(DebugTexts.preview(text)) { pet.say(text) }
+            ForEach(DebugTexts.Sample.allCases) { sample in
+                Button(sample.title(settings.lang)) { debug.say(sample.text(settings.lang)) }
             }
             Divider()
-            Button(tr("Until closed, with a link", "Do zamknięcia, z linkiem")) {
-                pet.say(DebugTexts.sticky(settings.lang), for: .infinity, link: URL(string: "https://github.com/Swiezu/llm-pet"))
-            }
-            Button(tr("10 s, with a folder link", "10 s, z linkiem do folderu")) {
-                pet.say(DebugTexts.timedLink(settings.lang), for: 10, link: FileManager.default.homeDirectoryForCurrentUser.appending(path: "Downloads"))
-            }
-            Button(tr("With a title and subtitle", "Z nagłówkiem i podtytułem")) {
-                pet.say(DebugTexts.timedLink(settings.lang), title: "CI", subtitle: "llm-pet · main", for: 10)
-            }
-            Button(tr("Conversation (left and right)", "Rozmowa (lewo i prawo)")) {
-                pet.say(tr("Got a minute for a review?", "Masz chwilę na review?"), title: "Ala → Ola", subtitle: "12:01", style: .left, for: 12)
-                pet.say(tr("Sure, send the link.", "Jasne, wrzuć link."), title: "Ola → Ala", subtitle: "12:02", style: .right, for: 12)
-            }
-            Button(tr("Long, 30 s (expand)", "Długi, 30 s (rozwiń)")) {
-                pet.say(DebugTexts.long(settings.lang), for: 30)
-            }
-            Button(tr("Long, until closed (expand)", "Długi, do zamknięcia (rozwiń)")) {
-                pet.say(DebugTexts.long(settings.lang), for: .infinity)
-            }
-            Button(tr("5 bubbles at once (queue)", "5 dymków naraz (kolejka)")) {
-                for index in 1...5 { pet.say(tr("Bubble \(index) of 5", "Dymek \(index) z 5"), for: 4) }
-            }
-        }
-        .disabled(!pet.enabled)
-        Menu("DEBUG CHANNEL") {
-            ForEach(settings.channels) { channel in
-                Button(channel.muted ? tr("\(channel.name) (muted)", "\(channel.name) (wyciszony)") : channel.name) {
-                    pet.say(DebugTexts.all(settings.lang).randomElement() ?? DebugTexts.greeting(settings.lang), on: channel)
+            Button(tr("Conversation (left and right)", "Rozmowa (lewo i prawo)")) { debug.conversation() }
+            Button(tr("5 bubbles at once (queue)", "5 dymków naraz (kolejka)")) { debug.queue() }
+            Section(tr("Options", "Opcje")) {
+                Toggle(tr("Title and subtitle", "Nagłówek i podtytuł"), isOn: $debug.header)
+                Toggle(tr("Random trick", "Losowy trik"), isOn: $debug.trick)
+                Picker(tr("Time", "Czas"), selection: $debug.time) {
+                    ForEach(DebugBubble.Time.allCases) { Text($0.title(settings.lang)).tag($0) }
+                }
+                Picker(tr("Link", "Link"), selection: $debug.link) {
+                    ForEach(DebugBubble.Link.allCases) { Text($0.title(settings.lang)).tag($0) }
+                }
+                Picker(tr("Style", "Styl"), selection: $debug.style) {
+                    ForEach(BubbleStyle.allCases, id: \.self) { Text(DebugBubble.title($0)).tag($0) }
+                }
+                Picker(tr("Channel", "Kanał"), selection: $debug.channelID) {
+                    ForEach(settings.channels) { channel in
+                        Text(channel.muted ? tr("\(channel.name) (muted)", "\(channel.name) (wyciszony)") : channel.name).tag(channel.id)
+                    }
                 }
             }
         }

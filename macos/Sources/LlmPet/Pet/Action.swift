@@ -8,11 +8,45 @@ enum Action: String, CaseIterable, Identifiable {
     case beamDown = "beamdown", poofIn = "poofin", flyIn = "flyin"
     case portalOut = "portalout", beamUp = "beamup", poof, flyAway = "flyaway"
 
+    enum Category: String, CaseIterable, Identifiable {
+        case basics, entrance, exit, work, delivery, power, breaks, channels
+
+        var id: String { rawValue }
+        var actions: [Action] { Action.allCases.filter { $0.category == self } }
+
+        func title(_ language: Language) -> String {
+            let (en, pl): (String, String) = switch self {
+            case .basics: ("Basics", "Podstawowe")
+            case .entrance: ("Entrances", "Wejścia")
+            case .exit: ("Exits", "Wyjścia")
+            case .work: ("Work", "Praca")
+            case .delivery: ("Delivery", "Wysyłka i wdrożenia")
+            case .power: ("Power", "Moc")
+            case .breaks: ("Breaks", "Przerwy")
+            case .channels: ("Channels", "Kanały")
+            }
+            return language == .pl ? pl : en
+        }
+    }
+
     static let tricks: [Action] = [.hop, .flag, .party]
-    static let entrances: [Action] = [.teleport, .beamDown, .poofIn, .flyIn]
-    static let exits: [Action] = [.portalOut, .beamUp, .poof, .flyAway]
+    static let entrances = Category.entrance.actions
+    static let exits = Category.exit.actions
 
     var id: String { rawValue }
+
+    var category: Category {
+        switch self {
+        case .idle, .walk, .hop, .flag, .party, .sleep: .basics
+        case .teleport, .beamDown, .poofIn, .flyIn: .entrance
+        case .portalOut, .beamUp, .poof, .flyAway: .exit
+        case .typing, .lockIn, .buffering, .contextFull, .compact, .helloAI: .work
+        case .letter, .paperPlane, .deploy, .shipIt: .delivery
+        case .workout, .kamehameha, .powerUp: .power
+        case .coffee, .smoke, .chill, .lunch, .dillyDally: .breaks
+        case .mute, .unmute: .channels
+        }
+    }
 
     func title(_ language: Language) -> String {
         let (en, pl): (String, String) = switch self {

@@ -11,9 +11,8 @@ Right-clicking the pet opens the same menu (`PetMenu`).
 | Animations | switch; off = no animations at all (API, menu and click are ignored, no teleport, no blinking), the pet stands still (`animationsEnabled`) |
 | Fast mode | switch; animations run at the fast speed from the settings (`fastMode`) |
 | Channels | a switch per channel, checked = shown, unchecked = muted (same as in the settings) |
-| DEBUG ANIMATION | plays the chosen animation |
-| DEBUG TEXT | shows a text from the test pool (`Pet/DebugTexts.swift`) on the main channel; at the bottom a bubble that stays until closed with a link, a 10 s bubble with a folder link, a 10 s bubble with a title and subtitle, a conversation (left and right), a long bubble to expand (30 s and until closed) and 5 bubbles at once (queue) |
-| DEBUG CHANNEL | a random test text on the chosen channel (checks color and muting) |
+| DEBUG ANIMATION | plays the chosen animation, grouped by `Action.Category` (basics, entrances, exits, work, delivery, power, breaks, channels) |
+| DEBUG TEXT | five test texts (`DebugTexts.Sample`: short, sentence, five lines, a word without spaces, long to expand), a conversation (left and right) and 5 bubbles at once (queue); every one of them uses the options below (`DebugBubble`, kept until quit): title and subtitle, a random trick, time (by length, 10 s, until closed), link (none, website, folder), style (bubble, chat left, chat right) and channel (checks color and muting) |
 | Quit (⌘Q) | plays a random exit first (`applicationShouldTerminate` answers `.terminateLater`, with a 10 s fallback); a hidden pet quits at once |
 
 ## Settings
@@ -83,8 +82,8 @@ Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir
 |---|---|
 | `LlmPetApp.swift` | app entry, menu bar menu with the DEBUG items, first launch language choice |
 | `Pet/Pet.swift` | pet state, window, movement loop (walk, drop, drag), entrance on show and exit on hide or quit, spring scaling to the size from the settings |
-| `Pet/Action.swift` | animations: API name, localized title, duration, click tricks |
-| `Pet/DebugTexts.swift` | test texts and the greeting (English and Polish) |
+| `Pet/Action.swift` | animations: API name, localized title, category for the DEBUG menu, duration, click tricks |
+| `Pet/DebugTexts.swift` | test texts, the greeting (English and Polish) and the DEBUG TEXT options (`DebugBubble`) |
 | `Pet/FrameDump.swift` | `--dump-frames`: animation frame sheets as PNG |
 | `Pet/DocsRender.swift` | `--render-docs`: logo and animation GIFs for `docs/` |
 | `Settings/` | `AppSettings` (language, FPS, channels, pet size, bubble text size), `Language` (translations and first launch picker), `Channel` (color, mute), `SettingsView`, `SettingsWindow` |
@@ -102,7 +101,7 @@ Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir
 | `Animations/Resize.swift` | pose while the pet changes size (not an API action): straining when it grows, squeezing when it shrinks |
 
 ## New animation
-1. A `case` in `Pet/Action.swift` with `title` (English and Polish) and `duration` (optionally in `tricks`); it shows up in the DEBUG ANIMATION menu and the API automatically.
+1. A `case` in `Pet/Action.swift` with `title` (English and Polish), `category` and `duration` (optionally in `tricks`); it shows up in its category in the DEBUG ANIMATION menu and the API automatically.
 2. `Animations/<Name>.swift`: `extension Pose { mutating func <name>(t: TimeInterval, clock: TimeInterval) }`.
 3. A branch in `Animations/Choreography.swift`; new props: a field in `Pose` drawn in `SpriteView` or scene items via `place(...)` (art in `Render/Props.swift`), effects in `Effects.swift`.
 4. Check the frames with `--dump-frames` and refresh the README GIFs with `--render-docs docs`.

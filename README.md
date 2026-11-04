@@ -79,7 +79,7 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 | Settings… (⌘,) | language, channels (name, color, mute, delete), pet size, bubble text size, max bubble width and height, animation speed, VSync, frame rate on power and on battery |
 | Animations / Fast mode | switches: animations off (the pet just stands still), fast mode (the fast speed from the settings) |
 | Channels | one switch per channel: on = shown, off = muted |
-| DEBUG ANIMATION / TEXT / CHANNEL | preview animations, texts and channel colors |
+| DEBUG ANIMATION / TEXT | preview animations by category, and test texts with options (title, link, time, style, channel) |
 | Quit (⌘Q) | plays a random exit first |
 
 ### From an LLM (MCP)
