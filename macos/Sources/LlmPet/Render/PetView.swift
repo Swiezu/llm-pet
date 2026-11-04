@@ -4,7 +4,7 @@ struct PetView: View {
     let pet: Pet
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: AppSettings.shared.vsync ? nil : 1.0 / Double(AppSettings.shared.fps))) { context in
+        TimelineView(.animation(minimumInterval: pet.calm ? 1.0 / 15 : AppSettings.shared.vsync ? nil : 1.0 / Double(AppSettings.shared.fps))) { context in
             let now = context.date
             PetFrame(
                 pose: Pose(pet: pet, now: now),

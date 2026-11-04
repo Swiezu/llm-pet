@@ -18,6 +18,7 @@ final class Pet {
     private(set) var held = false
     private(set) var falling = false
     private(set) var landStart: Date?
+    private(set) var calm = false
     private(set) var scale = CGFloat(AppSettings.shared.petScale)
     @ObservationIgnored private(set) var resizeUntil = Date.distantPast
     @ObservationIgnored private(set) var growing = true
@@ -89,6 +90,7 @@ final class Pet {
         let mouse = NSEvent.mouseLocation
         if !held {
             held = true
+            calm = false
             falling = false
             grab = CGPoint(x: mouse.x - x, y: mouse.y - (y ?? 0))
         }
@@ -146,6 +148,7 @@ final class Pet {
     private func start(_ next: Action) {
         action = next
         actionStart = time(.now)
+        if calm { calm = false }
     }
 
     private func finish() {
@@ -165,7 +168,11 @@ final class Pet {
         let floor = screen.minY
         resize(now, dt: k / 60)
         bubbles.update(now)
-        defer { placeBubble(screen, floor: floor, now: now) }
+        defer {
+            placeBubble(screen, floor: floor, now: now)
+            let settled = action == .idle && !held && !falling && now >= resizeUntil && scaleSpeed == 0 && landStart.map { now.timeIntervalSince($0) >= 0.3 } ?? true
+            if calm != settled { calm = settled }
+        }
         if held {
             place(screen, floor: floor)
             return
