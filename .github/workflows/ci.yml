@@ -24,11 +24,11 @@ jobs:
         run: macos/.build/release/llm-pet --dump-frames frames
       - name: Package
         run: ditto -c -k --keepParent build/llm-pet.app llm-pet.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: llm-pet
           path: llm-pet.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: frames
           path: frames
@@ -86,7 +86,7 @@ jobs:
         run: |
           git tag "v${{ steps.version.outputs.next }}"
           git push origin "v${{ steps.version.outputs.next }}"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         if: steps.version.outputs.next
         with:
           name: llm-pet
