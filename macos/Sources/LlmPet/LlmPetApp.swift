@@ -47,6 +47,13 @@ struct PetMenu: View {
             Button(tr("10 s, with a folder link", "10 s, z linkiem do folderu")) {
                 pet.say(DebugTexts.timedLink(settings.lang), for: 10, link: FileManager.default.homeDirectoryForCurrentUser.appending(path: "Downloads"))
             }
+            Button(tr("With a title and subtitle", "Z nagłówkiem i podtytułem")) {
+                pet.say(DebugTexts.timedLink(settings.lang), title: "CI", subtitle: "llm-pet · main", for: 10)
+            }
+            Button(tr("Conversation (left and right)", "Rozmowa (lewo i prawo)")) {
+                pet.say(tr("Got a minute for a review?", "Masz chwilę na review?"), title: "Ala → Ola", subtitle: "12:01", style: .left, for: 12)
+                pet.say(tr("Sure, send the link.", "Jasne, wrzuć link."), title: "Ola → Ala", subtitle: "12:02", style: .right, for: 12)
+            }
             Button(tr("Long, 30 s (expand)", "Długi, 30 s (rozwiń)")) {
                 pet.say(DebugTexts.long(settings.lang), for: 30)
             }

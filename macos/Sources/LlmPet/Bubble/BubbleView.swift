@@ -18,9 +18,14 @@ struct BubbleView: View {
         VStack(alignment: .leading, spacing: 0) {
             if bubble.below && bubble.pointing { tail(pointingUp: true) }
             VStack(alignment: .trailing, spacing: 5) {
-                HStack(alignment: .top, spacing: 6) {
-                    message
-                    corner
+                if bubble.hasHeader {
+                    header
+                    message.frame(width: bubble.width + 6 + corner, alignment: .leading)
+                } else {
+                    HStack(alignment: .top, spacing: 6) {
+                        message
+                        close
+                    }
                 }
                 if bubble.truncated || bubble.link != nil {
                     HStack(spacing: 12) {
@@ -33,6 +38,7 @@ struct BubbleView: View {
                                         .rotationEffect(.degrees(180 * bubble.openness))
                                 }
                                 .font(Font(bubble.linkFont))
+                                .foregroundStyle(bubble.accent)
                                 .lineLimit(1)
                                 .fixedSize()
                                 .padding(5)
@@ -55,7 +61,7 @@ struct BubbleView: View {
                             .help(bubble.link?.isFileURL == true ? bubble.link?.path ?? "" : bubble.link?.absoluteString ?? "")
                         }
                     }
-                    .frame(width: bubble.width + 6 + 14 * bubble.zoom)
+                    .frame(width: bubble.width + 6 + corner)
                 }
             }
             .foregroundStyle(bubble.foreground)
@@ -116,6 +122,31 @@ struct BubbleView: View {
         }
     }
 
+    private var header: some View {
+        HStack(spacing: 6) {
+            if let title = bubble.title {
+                Text(title)
+                    .font(Font(bubble.titleFont))
+                    .foregroundStyle(bubble.heading)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .layoutPriority(1)
+            }
+            Spacer(minLength: 8)
+            if let subtitle = bubble.subtitle {
+                Text(subtitle)
+                    .font(Font(bubble.linkFont))
+                    .foregroundStyle(bubble.accent)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            close
+        }
+        .frame(width: bubble.width + 6 + corner)
+    }
+
+    private var corner: CGFloat { 18 * bubble.zoom }
+
     private var badge: some View {
         Text("+\(bubble.waiting)")
             .font(.system(size: 10, weight: .heavy, design: .monospaced))
@@ -127,26 +158,26 @@ struct BubbleView: View {
             .help(tr("\(bubble.waiting) more waiting", "Czeka jeszcze: \(bubble.waiting)"))
     }
 
-    private var corner: some View {
+    private var close: some View {
         Button { bubble.dismiss() } label: {
             ZStack {
                 if !bubble.forever {
                     ZStack {
-                        Circle().stroke(bubble.foreground.opacity(0.2), lineWidth: 1.5)
+                        Circle().stroke(bubble.foreground.opacity(0.2), lineWidth: 2)
                         Circle()
                             .trim(from: 0, to: 1 - bubble.progress)
-                            .stroke(bubble.foreground, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                            .stroke(bubble.foreground, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                     }
-                    .padding(0.75)
+                    .padding(1)
                     .scaleEffect(1 + bubble.openness * 0.3)
                     .opacity(1 - bubble.openness)
                 }
                 Image(systemName: "xmark")
-                    .font(.system(size: 9 * bubble.zoom, weight: .heavy))
-                    .scaleEffect(bubble.forever ? 1 : 0.55 + 0.45 * bubble.openness)
+                    .font(.system(size: 11 * bubble.zoom, weight: .heavy))
+                    .scaleEffect(bubble.forever ? 1 : 0.7 + 0.3 * bubble.openness)
             }
-            .frame(width: 14 * bubble.zoom, height: 14 * bubble.zoom)
+            .frame(width: corner, height: corner)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -154,7 +185,7 @@ struct BubbleView: View {
     }
 
     private func tail(pointingUp: Bool) -> some View {
-        VStack(spacing: 0) {
+        VStack(alignment: bubble.style == .left ? .leading : bubble.style == .right ? .trailing : .center, spacing: 0) {
             if pointingUp { Rectangle().frame(width: 4, height: 5) }
             Rectangle().frame(width: 8, height: 6)
             if !pointingUp { Rectangle().frame(width: 4, height: 5) }

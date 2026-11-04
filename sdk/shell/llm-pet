@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sends commands to llm-pet through its local API (curl + jq shipped with macOS).
-# usage: llm-pet say "text" [-c channel] [-a animation] [-s seconds, 0 = until closed] [-l link] | action <animation> | actions | channels | channel-add <name> [#RRGGBB] | channel-remove <channel> | status | show | hide
+# usage: llm-pet say "text" [-t title] [-T subtitle] [-S bubble|left|right] [-c channel] [-a animation] [-s seconds, 0 = until closed] [-l link] | action <animation> | actions | channels | channel-add <name> [#RRGGBB] | channel-remove <channel> | status | show | hide
 set -euo pipefail
 file="$HOME/Library/Application Support/llm-pet/server.json"
 [ -f "$file" ] || { echo "llm-pet is not running (no server.json)" >&2; exit 1; }
@@ -14,9 +14,12 @@ case "$command" in
   say)
     [ -n "${1:-}" ] || usage
     text="$1"; shift
-    channel="" animation="" seconds="" link=""
-    while getopts "c:a:s:l:" option; do
+    title="" subtitle="" style="" channel="" animation="" seconds="" link=""
+    while getopts "t:T:S:c:a:s:l:" option; do
       case "$option" in
+        t) title="$OPTARG" ;;
+        T) subtitle="$OPTARG" ;;
+        S) style="$OPTARG" ;;
         c) channel="$OPTARG" ;;
         a) animation="$OPTARG" ;;
         s) seconds="$OPTARG" ;;
@@ -24,8 +27,8 @@ case "$command" in
         *) usage ;;
       esac
     done
-    call POST /say "$(jq -nc --arg text "$text" --arg channel "$channel" --arg animation "$animation" --arg seconds "$seconds" --arg link "$link" \
-      '{text: $text} + (if $channel == "" then {} else {channel: $channel} end) + (if $animation == "" then {} else {animation: $animation} end) + (if $seconds == "" then {} else {seconds: ($seconds | tonumber)} end) + (if $link == "" then {} else {link: $link} end)')" ;;
+    call POST /say "$(jq -nc --arg text "$text" --arg title "$title" --arg subtitle "$subtitle" --arg style "$style" --arg channel "$channel" --arg animation "$animation" --arg seconds "$seconds" --arg link "$link" \
+      '{text: $text} + (if $title == "" then {} else {title: $title} end) + (if $subtitle == "" then {} else {subtitle: $subtitle} end) + (if $style == "" then {} else {style: $style} end) + (if $channel == "" then {} else {channel: $channel} end) + (if $animation == "" then {} else {animation: $animation} end) + (if $seconds == "" then {} else {seconds: ($seconds | tonumber)} end) + (if $link == "" then {} else {link: $link} end)')" ;;
   action) [ -n "${1:-}" ] || usage; call POST /action "$(jq -nc --arg name "$1" '{name: $name}')" ;;
   actions) call GET /actions ;;
   channels) call GET /channels ;;

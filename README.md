@@ -37,6 +37,8 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 
 - **Speech bubbles with channels**: a main channel plus as many as you like, each with its own name and color; text types itself out, bubbles keep to the screen edges.
 - **Queue**: up to 2 bubbles stacked above the pet, the rest wait their turn and a "+n" badge shows how many.
+- **Header**: an optional `title` (bold, top left) and `subtitle` (top right next to the X), e.g. the project and the branch; their colors and the "more" color are set per channel.
+- **Style**: `bubble` (default) or `left` / `right`, chat-like messages on one side, so a conversation reads left (incoming) and right (reply).
 - **Duration and links**: every bubble has an X in the corner, with a ring around it counting down until the bubble disappears; `seconds: 0` keeps it until you click X; an optional link (URL, deep link or file path) at the bottom right opens on click.
 - **Long messages**: line breaks are kept; text taller than the bubble gets "more", which smoothly expands it to the full text (up to twice as wide, scrollable when it does not fit on screen), pauses the countdown and shows X; "less" collapses it and the countdown resumes.
 - **Muting only by the user** (settings, menu bar or the right-click menu on the pet), so neither an LLM nor another app can get around it; Clawd plays a mute or unmute animation.
@@ -82,7 +84,7 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 git clone https://github.com/Swiezu/llm-pet.git && cd llm-pet && npm install
 claude mcp add llm-pet -- node "$PWD/mcp/server.mjs"
 ```
-Tools: `pet_say` (bubble, optional channel, animation, duration and link), `pet_action`, `pet_actions`, `pet_channels`, `pet_add_channel`, `pet_remove_channel`, `pet_status`. Details in [`mcp/README.md`](mcp/README.md).
+Tools: `pet_say` (bubble, optional title and subtitle, style, channel, animation, duration and link), `pet_action`, `pet_actions`, `pet_channels`, `pet_add_channel`, `pet_remove_channel`, `pet_status`. Details in [`mcp/README.md`](mcp/README.md).
 
 ### From the terminal and scripts
 ```bash

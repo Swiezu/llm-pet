@@ -8,7 +8,7 @@ final class Pet {
     static let shared = Pet()
     static let size = CGSize(width: 360, height: 320)
     static let drop: CGFloat = 8
-    static let edge = (size.width - Style.canvas.width * Style.unit) / 2 - 7
+    static let edge = (size.width - Style.canvas.width * Style.unit) / 2 + 3 * Style.unit
 
     private(set) var enabled = UserDefaults.standard.object(forKey: "petEnabled") as? Bool ?? true
     private(set) var action = Action.idle
@@ -67,9 +67,9 @@ final class Pet {
     }
 
     @discardableResult
-    func say(_ message: String, for seconds: TimeInterval? = nil, link: URL? = nil, animation: Action? = nil, on channel: Channel = AppSettings.shared.main) -> Int? {
+    func say(_ message: String, title: String? = nil, subtitle: String? = nil, style: BubbleStyle = .bubble, for seconds: TimeInterval? = nil, link: URL? = nil, animation: Action? = nil, on channel: Channel = AppSettings.shared.main) -> Int? {
         guard enabled, !channel.muted else { return nil }
-        return bubbles.say(message, for: seconds, link: link, background: channel.background, foreground: channel.foreground, onShow: animation.map { action in { [weak self] in self?.perform(action) } })
+        return bubbles.say(message, title: title, subtitle: subtitle, style: style, for: seconds, link: link, background: channel.background, foreground: channel.foreground, heading: channel.heading, accent: channel.accent, onShow: animation.map { action in { [weak self] in self?.perform(action) } })
     }
 
     func perform(_ next: Action) {
@@ -170,6 +170,7 @@ final class Pet {
         bubbles.update(now)
         defer {
             placeBubble(screen, floor: floor, now: now)
+            followMouse(now)
             let settled = action == .idle && !held && !falling && now >= resizeUntil && scaleSpeed == 0 && landStart.map { now.timeIntervalSince($0) >= 0.3 } ?? true
             if calm != settled { calm = settled }
         }
@@ -219,6 +220,15 @@ final class Pet {
         y = min(max(y ?? floor, floor), screen.maxY - size.height)
         let frame = NSRect(x: x.rounded(), y: (y ?? floor).rounded(), width: size.width.rounded(), height: size.height.rounded())
         if let window, window.frame != frame { window.setFrame(frame, display: true) }
+    }
+
+    private func followMouse(_ now: Date) {
+        guard let window else { return }
+        let pose = Pose(pet: self, now: now)
+        let body = CGSize(width: Style.canvas.width * Style.unit - 40, height: Style.canvas.height * Style.unit - 40)
+        let rect = NSRect(x: x + ((Self.size.width - body.width) / 2 + pose.dx * facing) * scale, y: (y ?? 0) + (20 + pose.lift) * scale, width: body.width * scale, height: body.height * scale)
+        let interactive = held || rect.contains(NSEvent.mouseLocation)
+        if window.ignoresMouseEvents == interactive { window.ignoresMouseEvents = !interactive }
     }
 
     private func resize(_ now: Date, dt: CGFloat) {

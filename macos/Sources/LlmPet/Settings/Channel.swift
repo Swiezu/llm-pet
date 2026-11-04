@@ -8,10 +8,15 @@ struct Channel: Codable, Identifiable, Hashable {
     var name: String
     var color: String
     var muted = false
+    var headingColor: String?
+    var accentColor: String?
 
     var isMain: Bool { id == Self.mainID }
+    var light: Bool { NSColor(hex: color).luminance > 0.55 }
     var background: Color { Color(hex: color) }
-    var foreground: Color { NSColor(hex: color).luminance > 0.55 ? .black.opacity(0.85) : .white }
+    var foreground: Color { light ? .black.opacity(0.85) : .white }
+    var heading: Color { Color(hex: headingColor ?? (light ? "#9A3F0C" : "#FFD27A")) }
+    var accent: Color { Color(hex: accentColor ?? (light ? "#1F5FA8" : "#A8D8FF")) }
 }
 
 extension NSColor {

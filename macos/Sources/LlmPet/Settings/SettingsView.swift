@@ -104,7 +104,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520)
+        .frame(width: 600)
         .frame(minHeight: 360)
     }
 
@@ -128,6 +128,13 @@ private struct ChannelRow: View {
         HStack(spacing: 10) {
             ColorPicker("Kolor", selection: Binding(get: { channel.background }, set: { channel.color = NSColor($0).hex }), supportsOpacity: false)
                 .labelsHidden()
+                .help(tr("Bubble color", "Kolor dymka"))
+            ColorPicker(tr("Title", "Tytuł"), selection: Binding(get: { channel.heading }, set: { channel.headingColor = NSColor($0).hex }), supportsOpacity: false)
+                .labelsHidden()
+                .help(tr("Title color", "Kolor tytułu"))
+            ColorPicker(tr("Accent", "Akcent"), selection: Binding(get: { channel.accent }, set: { channel.accentColor = NSColor($0).hex }), supportsOpacity: false)
+                .labelsHidden()
+                .help(tr("Subtitle and \"more\" color", "Kolor podtytułu i \"więcej\""))
             TextField(tr("Name", "Nazwa"), text: $channel.name, prompt: Text(tr("Name", "Nazwa")))
                 .labelsHidden()
                 .multilineTextAlignment(.leading)
@@ -136,9 +143,8 @@ private struct ChannelRow: View {
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
-            Text(tr("Preview", "Przykład"))
+            (Text(tr("Title ", "Tytuł ")).foregroundStyle(channel.heading) + Text(tr("text ", "tekst ")).foregroundStyle(channel.foreground) + Text(tr("more", "więcej")).foregroundStyle(channel.accent))
                 .font(.caption.weight(.semibold).monospaced())
-                .foregroundStyle(channel.foreground)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
                 .background(channel.background, in: RoundedRectangle(cornerRadius: 3))

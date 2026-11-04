@@ -97,10 +97,17 @@ final class PetServer {
                 guard let url = Self.link(value) else { return .error(400, "link must be a URL with a scheme (https://, file://, myapp://) or an absolute path") }
                 link = url
             }
+            var style = BubbleStyle.bubble
+            if let name = body["style"] as? String {
+                guard let value = BubbleStyle(rawValue: name) else { return .error(400, "unknown style, available: \(BubbleStyle.allCases.map(\.rawValue).joined(separator: ", "))") }
+                style = value
+            }
+            let title = (body["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).replacing(/\s+/, with: " ")
+            let subtitle = (body["subtitle"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).replacing(/\s+/, with: " ")
             guard pet.enabled else { return .error(409, "pet is hidden") }
             guard !channel.muted else { return .json(["ok": true, "shown": false, "muted": true, "channel": channel.id]) }
             let message = text.replacing("\r\n", with: "\n").replacing("\r", with: "\n").replacing("\\n", with: "\n")
-            guard let queued = pet.say(message, for: (body["seconds"] as? Double).map { $0 == 0 ? .infinity : min(3600, max(1, $0)) }, link: link, animation: animation, on: channel) else { return .error(429, "too many bubbles waiting (\(BubbleStack.maxQueue)), try again later") }
+            guard let queued = pet.say(message, title: title.flatMap { $0.isEmpty ? nil : $0 }, subtitle: subtitle.flatMap { $0.isEmpty ? nil : $0 }, style: style, for: (body["seconds"] as? Double).map { $0 == 0 ? .infinity : min(3600, max(1, $0)) }, link: link, animation: animation, on: channel) else { return .error(429, "too many bubbles waiting (\(BubbleStack.maxQueue)), try again later") }
             return .json(["ok": true, "shown": true, "queued": queued, "channel": channel.id])
         case ("POST", "/action"):
             guard let name = request.json?["name"] as? String, let action = Action(rawValue: name) else { return Self.unknownAction }

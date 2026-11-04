@@ -2,6 +2,10 @@ import AppKit
 import Observation
 import SwiftUI
 
+enum BubbleStyle: String, CaseIterable {
+    case bubble, left, right
+}
+
 @MainActor
 @Observable
 final class Bubble {
@@ -9,6 +13,9 @@ final class Bubble {
     private static let foldTime: TimeInterval = 0.35
 
     private(set) var text: String?
+    private(set) var title: String?
+    private(set) var subtitle: String?
+    private(set) var style = BubbleStyle.bubble
     private(set) var tail: CGFloat = 0
     private(set) var below = false
     private(set) var pointing = true
@@ -17,6 +24,8 @@ final class Bubble {
     private(set) var count = 0
     private(set) var background = Color.white
     private(set) var foreground = Color.black.opacity(0.85)
+    private(set) var heading = Color.black
+    private(set) var accent = Color.black
     private(set) var link: URL?
     private(set) var linkTitle = ""
     private(set) var forever = false
@@ -35,6 +44,8 @@ final class Bubble {
 
     var font: NSFont { .monospacedSystemFont(ofSize: fontSize, weight: .semibold) }
     var linkFont: NSFont { .monospacedSystemFont(ofSize: max(9, fontSize - 2), weight: .semibold) }
+    var titleFont: NSFont { .monospacedSystemFont(ofSize: fontSize + 1, weight: .heavy) }
+    var hasHeader: Bool { title != nil || subtitle != nil }
     var zoom: CGFloat { fontSize / Self.baseFont }
     var expandTitle: String { expanded ? Self.less : Self.more }
     var width: CGFloat { (folded.width + (unfolded.width - folded.width) * openness).rounded() }
@@ -62,7 +73,12 @@ final class Bubble {
     @ObservationIgnored private var lastFit = NSSize.zero
     @ObservationIgnored private var chrome: NSSize?
 
-    func say(_ message: String, for seconds: TimeInterval? = nil, link: URL? = nil, background: Color = .white, foreground: Color = .black.opacity(0.85)) {
+    func say(_ message: String, title: String? = nil, subtitle: String? = nil, style: BubbleStyle = .bubble, for seconds: TimeInterval? = nil, link: URL? = nil, background: Color = .white, foreground: Color = .black.opacity(0.85), heading: Color = .black, accent: Color = .black) {
+        self.heading = heading
+        self.accent = accent
+        self.title = title
+        self.subtitle = subtitle
+        self.style = style
         self.background = background
         self.foreground = foreground
         self.link = link
@@ -186,7 +202,8 @@ final class Bubble {
         let linkWidth = link == nil ? 0 : (linkTitle as NSString).size(withAttributes: [.font: linkFont]).width
         let expandWidth = truncated ? [Self.more, Self.less].map { ($0 as NSString).size(withAttributes: [.font: linkFont]).width }.max()! + linkFont.pointSize + 4 : 0
         let footer = linkWidth + expandWidth + (link != nil && truncated ? 12 : 0)
-        let foldedWidth = min(maxWidth, ceil(max(widest(short), footer)) + 2)
+        let header = hasHeader ? (title ?? "").size(withAttributes: [.font: titleFont]).width + (subtitle ?? "").size(withAttributes: [.font: linkFont]).width + 20 : 0
+        let foldedWidth = min(maxWidth, ceil(max(widest(short), footer, header)) + 2)
         folded = CGSize(width: foldedWidth, height: truncated ? min(height(short, width: foldedWidth), ceil(lineHeight * CGFloat(lines))) : 0)
         guard truncated else {
             unfolded = folded
@@ -195,7 +212,7 @@ final class Bubble {
             return
         }
         let wide = max(maxWidth, min(maxWidth * 2, room.width))
-        let unfoldedWidth = min(wide, ceil(max(widest(full), footer)) + 2)
+        let unfoldedWidth = min(wide, ceil(max(widest(full), footer, header)) + 2)
         let tall = height(full, width: unfoldedWidth)
         let scroll: CGFloat? = tall > room.height ? max(folded.height, room.height) : nil
         if scroll != self.scroll { self.scroll = scroll }
@@ -257,11 +274,20 @@ final class Bubble {
             width: max(frame.width, ceil(measured.width + max(folded.width, unfolded.width) - width - 0.01)),
             height: max(frame.height, ceil(measured.height + max(folded.height, unfolded.height) - textHeight - 0.01))
         )
-        let x = canvas.width > frame.width ? min(max(center - canvas.width / 2, screen.minX + 4), screen.maxX - canvas.width - 4) : frame.minX
+        let anchor = switch style {
+        case .bubble: center - canvas.width / 2
+        case .left: frame.maxX - canvas.width
+        case .right: frame.minX
+        }
+        let x = canvas.width > frame.width ? min(max(anchor, screen.minX + 4), screen.maxX - canvas.width - 4) : frame.minX
         let target = NSRect(x: x, y: below ? frame.maxY - canvas.height : frame.minY, width: canvas.width, height: canvas.height).integral
         let inset = CGPoint(x: (frame.minX - target.minX).rounded(), y: (target.maxY - frame.maxY).rounded())
         if inset != self.inset { self.inset = inset }
-        let tail = (center - target.minX - inset.x).rounded()
+        let tail: CGFloat = switch style {
+        case .bubble: (center - target.minX - inset.x).rounded()
+        case .left: 24
+        case .right: frame.width - 16
+        }
         if tail != self.tail { self.tail = tail }
         if window.frame != target { window.setFrame(target, display: true) }
         let interactive = frame.contains(NSEvent.mouseLocation)

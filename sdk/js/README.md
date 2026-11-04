@@ -10,7 +10,7 @@ Not published to npm: install it from a clone of the repository (no dependencies
 ```js
 import { say, action, actions, channels, addChannel, removeChannel, status, show, hide } from '@swiezu/llm-pet-sdk'
 
-await say('Build is green', { channel: 'Build', animation: 'shipit' })
+await say('Build is green', { title: 'llm-pet', subtitle: 'main', channel: 'Build', animation: 'shipit' })
 await say('Review needed', { seconds: 0, link: 'https://github.com/Swiezu/llm-pet/pulls' })
 await action('deploy')
 console.log((await actions()).map(a => a.name))

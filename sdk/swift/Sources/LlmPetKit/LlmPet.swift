@@ -47,8 +47,11 @@ public struct LlmPet: Sendable {
     }
 
     @discardableResult
-    public func say(_ text: String, channel: String? = nil, animation: String? = nil, seconds: Double? = nil, link: String? = nil) async throws -> Bool {
+    public func say(_ text: String, title: String? = nil, subtitle: String? = nil, style: String? = nil, channel: String? = nil, animation: String? = nil, seconds: Double? = nil, link: String? = nil) async throws -> Bool {
         var body: [String: Any] = ["text": text]
+        if let title { body["title"] = title }
+        if let subtitle { body["subtitle"] = subtitle }
+        if let style { body["style"] = style }
         if let channel { body["channel"] = channel }
         if let animation { body["animation"] = animation }
         if let seconds { body["seconds"] = seconds }
