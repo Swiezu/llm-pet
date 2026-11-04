@@ -73,7 +73,7 @@ final class Pet {
 
     func perform(_ next: Action) {
         guard enabled, !held, !falling, AppSettings.shared.animationsEnabled || next == .idle else { return }
-        if next == .walk, let screen = (window?.screen ?? NSScreen.main)?.visibleFrame {
+        if next == .walk, let screen = screen?.visibleFrame {
             target = .random(in: (screen.minX - Self.edge * scale)...(screen.maxX - frameSize.width + Self.edge * scale))
         }
         if next == .teleport { facing = 1 }
@@ -155,7 +155,7 @@ final class Pet {
     }
 
     private func tick() {
-        guard let screen = (window?.screen ?? NSScreen.main)?.visibleFrame else { return }
+        guard let screen = screen?.visibleFrame else { return }
         let now = Date.now
         let k = CGFloat(min(0.1, max(0, now.timeIntervalSince(lastTick))) * 60)
         lastTick = now
@@ -199,6 +199,11 @@ final class Pet {
             }
         }
         place(screen, floor: floor)
+    }
+
+    private var screen: NSScreen? {
+        let point = held ? NSEvent.mouseLocation : CGPoint(x: x + frameSize.width / 2, y: (y ?? 0) + frameSize.height / 2)
+        return NSScreen.screens.first { NSMouseInRect(point, $0.frame, false) } ?? window?.screen ?? NSScreen.main
     }
 
     private func place(_ screen: NSRect, floor: CGFloat) {

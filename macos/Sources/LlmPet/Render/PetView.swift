@@ -16,6 +16,7 @@ struct PetView: View {
             )
             .scaleEffect(pet.scale, anchor: .bottom)
             .frame(width: pet.frameSize.width, height: pet.frameSize.height, alignment: .bottom)
+            .drawingGroup()
             .onTapGesture { pet.poke() }
             .contextMenu { PetMenu() }
             .gesture(DragGesture(minimumDistance: 3).onChanged { _ in pet.hold() }.onEnded { _ in pet.release() })
