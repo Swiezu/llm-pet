@@ -66,7 +66,30 @@ struct SettingsView: View {
             } header: {
                 Text(tr("Max bubble size", "Maksymalny rozmiar dymku"))
             } footer: {
-                Text(tr("Width and height of a collapsed bubble. Longer messages get \"more\": an expanded bubble shows the whole text, up to twice as wide, and its countdown stops until you collapse it or close it with X.", "Szerokość i wysokość zwiniętego dymku. Dłuższe wiadomości mają \"więcej\": rozwinięty dymek pokazuje cały tekst, do dwóch razy szerzej, a odliczanie stoi, dopóki go nie zwiniesz albo nie zamkniesz X."))
+                Text(tr("Width and height of a collapsed bubble. Longer messages get \"more\".", "Szerokość i wysokość zwiniętego dymku. Dłuższe wiadomości mają \"więcej\"."))
+                    .foregroundStyle(.secondary)
+            }
+            Section {
+                LabeledContent(tr("Max width", "Maksymalna szerokość")) {
+                    HStack {
+                        Slider(value: $settings.expandedWidth, in: AppSettings.expandedWidths, step: 20)
+                        Text("\(Int(settings.expandedWidth)) pt")
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+                LabeledContent(tr("Max height", "Maksymalna wysokość")) {
+                    HStack {
+                        Slider(value: Binding(get: { Double(settings.expandedLines) }, set: { settings.expandedLines = Int($0.rounded()) }), in: Double(AppSettings.expandedHeights.lowerBound)...Double(AppSettings.expandedHeights.upperBound), step: 1)
+                        Text(tr("\(settings.expandedLines) ln", "\(settings.expandedLines) l."))
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+            } header: {
+                Text(tr("Expanded bubble", "Rozwinięty dymek"))
+            } footer: {
+                Text(tr("\"More\" expands the bubble to the whole text, at most this size and the room on screen; anything longer scrolls. The countdown stops until you collapse it or close it with X.", "\"Więcej\" rozwija dymek do całego tekstu, najwyżej do tego rozmiaru i miejsca na ekranie; dłuższy tekst się przewija. Odliczanie stoi, dopóki go nie zwiniesz albo nie zamkniesz X."))
                     .foregroundStyle(.secondary)
             }
             Section {

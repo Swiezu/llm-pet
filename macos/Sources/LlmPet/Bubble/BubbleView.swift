@@ -13,6 +13,8 @@ struct BubbleCanvas: View {
 
 struct BubbleView: View {
     let bubble: Bubble
+    @State private var position = ScrollPosition()
+    @State private var scrolled = CGPoint.zero
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -97,6 +99,14 @@ struct BubbleView: View {
             .font(Font(bubble.font))
             .frame(width: bubble.width, height: bubble.textHeight, alignment: .topLeading)
             .clipped()
+            .overlay(alignment: .topTrailing) {
+                if let height = bubble.scroll, bubble.openness > 0 {
+                    let top = bubble.hasHeader ? 0 : corner + 4
+                    scrollbar(viewport: height, track: max(0, height - top))
+                        .offset(x: 6 + corner, y: top)
+                        .opacity(bubble.openness)
+                }
+            }
         } else {
             ZStack(alignment: .topLeading) {
                 Text(bubble.text ?? "").opacity(0)
@@ -113,13 +123,34 @@ struct BubbleView: View {
     private var unfolded: some View {
         let text = Text(String(bubble.full.prefix(bubble.fullCount)))
             .fixedSize(horizontal: false, vertical: true)
-            .frame(width: bubble.unfolded.width, alignment: .leading)
         if let height = bubble.scroll {
-            ScrollView { text }
-                .frame(width: bubble.unfolded.width, height: height)
+            ScrollView { text.frame(width: bubble.unfolded.width, alignment: .leading) }
+                .scrollIndicators(.never)
+                .scrollPosition($position)
+                .onScrollGeometryChange(for: CGPoint.self) { CGPoint(x: $0.contentOffset.y, y: $0.contentSize.height) } action: { _, value in scrolled = value }
+                .frame(width: bubble.unfolded.width, height: height, alignment: .leading)
         } else {
-            text
+            text.frame(width: bubble.unfolded.width, alignment: .leading)
         }
+    }
+
+    private func scrollbar(viewport: CGFloat, track: CGFloat) -> some View {
+        let range = max(1, scrolled.y - viewport)
+        let thumb = min(track, max(16, track * min(1, viewport / max(1, scrolled.y))))
+        let top = (track - thumb) * min(1, max(0, scrolled.x / range))
+        return ZStack(alignment: .top) {
+            Rectangle().fill(bubble.foreground.opacity(0.15))
+            Rectangle().fill(bubble.foreground.opacity(0.6))
+                .frame(height: thumb)
+                .offset(y: top)
+        }
+        .frame(width: 4, height: track)
+        .frame(width: corner)
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 0).onChanged { drag in
+            let y = (drag.location.y - thumb / 2) / max(1, track - thumb) * range
+            position.scrollTo(y: min(range, max(0, y)))
+        })
     }
 
     private var header: some View {

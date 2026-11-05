@@ -11,6 +11,7 @@ enum BubbleStyle: String, CaseIterable {
 final class Bubble {
     private static let baseFont: CGFloat = 13
     private static let foldTime: TimeInterval = 0.35
+    private static let sizer = NSHostingController(rootView: AnyView(EmptyView()))
 
     private(set) var text: String?
     private(set) var title: String?
@@ -65,6 +66,8 @@ final class Bubble {
     @ObservationIgnored private var foldFrom: CGFloat = 0
     @ObservationIgnored private var foldStart = Date.now
     @ObservationIgnored private var maxWidth = CGFloat(AppSettings.shared.bubbleWidth)
+    @ObservationIgnored private var expandedWidth = CGFloat(AppSettings.shared.expandedWidth)
+    @ObservationIgnored private var expandedLines = AppSettings.shared.expandedLines
     @ObservationIgnored private var room = NSSize(width: 1200, height: 800)
     @ObservationIgnored private var window: NSPanel?
     @ObservationIgnored private var host: NSHostingController<BubbleCanvas>?
@@ -188,7 +191,7 @@ final class Bubble {
     }
 
     private func fit() {
-        let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
+        let lineHeight = height("X\nX", width: 1000) / 2
         truncated = height(full, width: maxWidth) > lineHeight * (CGFloat(lines) + 0.5)
         var short = full
         if truncated {
@@ -211,12 +214,14 @@ final class Bubble {
             count = min(count, text.count)
             return
         }
-        let wide = max(maxWidth, min(maxWidth * 2, room.width))
-        let unfoldedWidth = min(wide, ceil(max(widest(full), footer, header)) + 2)
-        let tall = height(full, width: unfoldedWidth)
-        let scroll: CGFloat? = tall > room.height ? max(folded.height, room.height) : nil
+        let wide = min(max(maxWidth, expandedWidth), room.width)
+        let needed = ceil(max(widest(full), footer, header)) + 2
+        let tall = height(full, width: min(wide, needed))
+        let space = min(CGFloat(expandedLines) * lineHeight, room.height - (chrome?.height ?? lineHeight * 6))
+        let limit = max(folded.height, floor(space / lineHeight) * lineHeight)
+        let scroll: CGFloat? = tall > limit ? limit : nil
         if scroll != self.scroll { self.scroll = scroll }
-        unfolded = CGSize(width: unfoldedWidth, height: scroll ?? tall)
+        unfolded = CGSize(width: min(wide, needed), height: scroll ?? tall)
         count = min(count, text.count)
     }
 
@@ -225,19 +230,23 @@ final class Bubble {
     }
 
     private func height(_ string: String, width: CGFloat) -> CGFloat {
-        ceil((string as NSString).boundingRect(with: NSSize(width: width, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font]).height)
+        Self.sizer.rootView = AnyView(Text(string).font(Font(font)).fixedSize(horizontal: false, vertical: true).frame(width: width, alignment: .leading))
+        return ceil(Self.sizer.sizeThatFits(in: NSSize(width: width, height: .greatestFiniteMagnitude)).height)
     }
 
     func layout(below: Bool, pointing: Bool, waiting: Int, room: NSSize) -> NSSize {
         let settings = AppSettings.shared
         let size = CGFloat(settings.bubbleFont)
         let maxWidth = CGFloat(settings.bubbleWidth)
+        let expandedWidth = CGFloat(settings.expandedWidth)
         let moved = abs(room.width - self.room.width) > 24 || abs(room.height - self.room.height) > 24
         if moved { self.room = room }
-        if size != fontSize || maxWidth != self.maxWidth || settings.bubbleLines != lines || moved && expanded {
+        if size != fontSize || maxWidth != self.maxWidth || settings.bubbleLines != lines || expandedWidth != self.expandedWidth || settings.expandedLines != expandedLines || moved && expanded {
             fontSize = size
             self.maxWidth = maxWidth
+            self.expandedWidth = expandedWidth
             lines = settings.bubbleLines
+            expandedLines = settings.expandedLines
             fit()
         }
         if below != self.below { self.below = below }

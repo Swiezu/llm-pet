@@ -11,6 +11,8 @@ final class AppSettings {
     static let bubbleFonts: ClosedRange<Double> = 10...22
     static let bubbleWidths: ClosedRange<Double> = 160...800
     static let bubbleHeights: ClosedRange<Int> = 2...30
+    static let expandedWidths: ClosedRange<Double> = 300...2000
+    static let expandedHeights: ClosedRange<Int> = 5...120
     static let petScales: ClosedRange<Double> = 0.5...2
     static let speeds: ClosedRange<Double> = 0.25...3
     static let fastSpeeds: ClosedRange<Double> = 1...5
@@ -67,6 +69,14 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(bubbleLines, forKey: "bubbleLines") }
     }
 
+    var expandedWidth: Double {
+        didSet { UserDefaults.standard.set(expandedWidth, forKey: "expandedWidth") }
+    }
+
+    var expandedLines: Int {
+        didSet { UserDefaults.standard.set(expandedLines, forKey: "expandedLines") }
+    }
+
     var petScale: Double {
         didSet { UserDefaults.standard.set(petScale, forKey: "petScale") }
     }
@@ -107,6 +117,10 @@ final class AppSettings {
         bubbleWidth = Self.bubbleWidths.contains(width) ? width : 300
         let lines = UserDefaults.standard.integer(forKey: "bubbleLines")
         bubbleLines = Self.bubbleHeights.contains(lines) ? lines : 8
+        let expandedWidth = UserDefaults.standard.double(forKey: "expandedWidth")
+        self.expandedWidth = Self.expandedWidths.contains(expandedWidth) ? expandedWidth : 800
+        let expandedLines = UserDefaults.standard.integer(forKey: "expandedLines")
+        self.expandedLines = Self.expandedHeights.contains(expandedLines) ? expandedLines : 40
         let scale = UserDefaults.standard.double(forKey: "petScale")
         petScale = Self.petScales.contains(scale) ? scale : 1
         language = UserDefaults.standard.string(forKey: "language").flatMap(Language.init)

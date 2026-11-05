@@ -52,9 +52,11 @@ final class BubbleStack {
         let step = min(1, now.timeIntervalSince(lastPlace) * 14)
         lastPlace = now
         guard !active.isEmpty else { return }
-        let room = NSSize(width: screen.width - 40, height: max(screen.maxY - head, bottom - screen.minY) - 90)
+        let above = screen.maxY - head
+        let under = bottom + 10 - screen.minY
+        let room = NSSize(width: screen.width - 40, height: max(above, under) - 4)
         let stacked = active.reduce(CGFloat(0)) { $0 + $1.layout(below: $1.below, pointing: $1 === active.first || $1.style != .bubble, waiting: $1.waiting, room: room).height + gap($1) }
-        let below = head + stacked > screen.maxY
+        let below = stacked > above && under > above
         var offset: CGFloat = 0
         for (index, bubble) in active.enumerated() {
             let size = bubble.layout(below: below, pointing: index == 0 || bubble.style != .bubble, waiting: index == active.count - 1 ? queue.count : 0, room: room)
