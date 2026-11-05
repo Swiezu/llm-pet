@@ -44,7 +44,7 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 - **Style**: `bubble` (default) or `left` / `right`, chat-like messages on one side, so a conversation reads left (incoming) and right (reply).
 - **Duration and links**: every bubble has an X in the corner, with a ring around it counting down until the bubble disappears; `seconds: 0` keeps it until you click X; an optional link (URL, deep link or file path) at the bottom right opens on click.
 - **Long messages**: line breaks are kept; text taller than the bubble gets "more", which smoothly expands it to the full text (up to the max expanded width and height from the settings and the room on screen; longer text scrolls, with a scrollbar under the X), pauses the countdown and shows X; "less" collapses it and the countdown resumes.
-- **Muting only by the user** (settings, menu bar or the right-click menu on the pet), so neither an LLM nor another app can get around it; Clawd plays a mute or unmute animation.
+- **Muting only by the user** (settings, menu bar or the right-click menu on the pet), so neither an LLM nor another app can get around it; Clawd plays a mute or unmute animation, and the muted channel's bubbles disappear.
 - **34 animations** triggered from the menu, the API, an SDK or MCP; clicking the pet plays a random trick; animation speed, a fast mode and an animations off switch.
 - **Right-click menu**: right-clicking the pet opens the same menu as the menu bar paw.
 - **Drag and drop**: grab the pet and move it, all the way up to the top edge of the screen; bubbles that no longer fit above it wait in the queue; on release it settles right where you left it, and it remembers the spot after hiding or quitting.

@@ -28,17 +28,25 @@ final class BubbleStack {
         }
     }
 
-    func say(_ text: String, title: String? = nil, subtitle: String? = nil, style: BubbleStyle = .bubble, for seconds: TimeInterval?, link: URL?, background: Color, foreground: Color, heading: Color, accent: Color, onShow: (() -> Void)? = nil) -> Int? {
+    func say(_ text: String, title: String? = nil, subtitle: String? = nil, style: BubbleStyle = .bubble, for seconds: TimeInterval?, link: URL?, channel: String, background: Color, foreground: Color, heading: Color, accent: Color, onShow: (() -> Void)? = nil) -> Int? {
         guard queued < Self.maxQueue else { return nil }
         let bubble = Bubble()
         bubble.say(text, title: title, subtitle: subtitle, style: style, for: seconds, link: link, background: background, foreground: foreground, heading: heading, accent: accent)
         bubble.onShow = onShow
+        bubble.channel = channel
         items.append(bubble)
         if AppSettings.shared.newestFirst {
             start = 0
             return 0
         }
         return max(0, items.count - start - min(limit, active.count + 1))
+    }
+
+    func drop(where silent: (String) -> Bool) {
+        let waiting = items.filter { bubble in silent(bubble.channel) && !active.contains { $0 === bubble } }
+        for bubble in waiting { bubble.close() }
+        items.removeAll { bubble in waiting.contains { $0 === bubble } }
+        for bubble in active where silent(bubble.channel) { bubble.dismiss() }
     }
 
     func update(_ now: Date) {

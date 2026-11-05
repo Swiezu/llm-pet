@@ -3,7 +3,7 @@ import Foundation
 extension Pose {
     init(action: Action, t: TimeInterval, clock: TimeInterval, walked: CGFloat = 0) {
         self.init()
-        if clock.truncatingRemainder(dividingBy: 3.6) < 0.12 { eyes = .blink }
+        if clock.truncatingRemainder(dividingBy: Idle.blink.every) < Idle.blink.length { eyes = .blink }
         switch action {
         case .walk: walk(walked: walked)
         case .idle: idle(clock: clock)

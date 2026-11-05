@@ -37,6 +37,7 @@ final class PetServer {
     private func accept(_ connection: NWConnection) {
         connection.start(queue: .main)
         receive(connection, buffer: Data())
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { connection.cancel() }
     }
 
     private func receive(_ connection: NWConnection, buffer: Data) {
@@ -104,14 +105,14 @@ final class PetServer {
             }
             let title = (body["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).replacing(/\s+/, with: " ")
             let subtitle = (body["subtitle"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).replacing(/\s+/, with: " ")
-            guard pet.enabled else { return .error(409, "pet is hidden") }
+            guard pet.enabled, !pet.isLeaving else { return .error(409, "pet is hidden") }
             guard !channel.muted else { return .json(["ok": true, "shown": false, "muted": true, "channel": channel.id]) }
-            let message = text.replacing("\r\n", with: "\n").replacing("\r", with: "\n").replacing("\\n", with: "\n")
+            let message = text.replacing("\r\n", with: "\n").replacing("\r", with: "\n")
             guard let queued = pet.say(message, title: title.flatMap { $0.isEmpty ? nil : $0 }, subtitle: subtitle.flatMap { $0.isEmpty ? nil : $0 }, style: style, for: (body["seconds"] as? Double).map { $0 == 0 ? .infinity : min(3600, max(1, $0)) }, link: link, animation: animation, on: channel) else { return .error(429, "too many bubbles waiting (\(BubbleStack.maxQueue)), try again later") }
             return .json(["ok": true, "shown": true, "queued": queued, "channel": channel.id])
         case ("POST", "/action"):
             guard let name = request.json?["name"] as? String, let action = Action(rawValue: name) else { return Self.unknownAction }
-            guard pet.enabled else { return .error(409, "pet is hidden") }
+            guard pet.enabled, !pet.isLeaving else { return .error(409, "pet is hidden") }
             pet.perform(action)
             return .json(["ok": true])
         case ("POST", "/show"), ("POST", "/hide"):
@@ -160,7 +161,7 @@ private struct Request {
             guard let colon = line.firstIndex(of: ":") else { continue }
             headers[line[..<colon].lowercased()] = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
         }
-        let length = Int(headers["content-length"] ?? "0") ?? 0
+        let length = max(0, Int(headers["content-length"] ?? "0") ?? 0)
         let body = data[end.upperBound...]
         guard body.count >= length else { return nil }
         method = String(start[0])

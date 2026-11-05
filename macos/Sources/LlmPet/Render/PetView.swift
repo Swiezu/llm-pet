@@ -2,10 +2,12 @@ import SwiftUI
 
 struct PetView: View {
     let pet: Pet
+    @State private var beat = 0
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: pet.calm ? 1.0 / 15 : AppSettings.shared.vsync ? nil : 1.0 / Double(AppSettings.shared.fps))) { context in
-            let now = context.date
+        TimelineView(.animation(minimumInterval: AppSettings.shared.vsync ? nil : 1.0 / Double(AppSettings.shared.fps), paused: pet.calm)) { _ in
+            let now = Date.now
+            let _ = beat
             PetFrame(
                 pose: Pose(pet: pet, now: now),
                 action: pet.action,
@@ -17,11 +19,17 @@ struct PetView: View {
             .scaleEffect(pet.scale, anchor: .bottom)
             .frame(width: pet.frameSize.width, height: pet.frameSize.height, alignment: .bottom)
             .drawingGroup()
-            .onTapGesture { pet.poke() }
-            .contextMenu { PetMenu() }
-            .gesture(DragGesture(minimumDistance: 3).onChanged { _ in pet.hold() }.onEnded { _ in pet.release() })
-            .help(tr("Click for a trick, drag to move, right-click for the menu", "Klik = sztuczka, przeciągnij = przenieś, prawy klik = menu"))
         }
+        .task(id: pet.calm) {
+            while pet.calm, !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(pet.untilIdleChange(.now)))
+                beat += 1
+            }
+        }
+        .onTapGesture { pet.poke() }
+        .contextMenu { PetMenu() }
+        .gesture(DragGesture(minimumDistance: 3).onChanged { _ in pet.hold() }.onEnded { _ in pet.release() })
+        .help(tr("Click for a trick, drag to move, right-click for the menu", "Klik = sztuczka, przeciągnij = przenieś, prawy klik = menu"))
     }
 }
 

@@ -132,11 +132,11 @@ struct SettingsView: View {
                 Toggle(tr("Fast mode", "Tryb szybki"), isOn: $settings.fastMode)
                 Toggle(tr("Animations", "Animacje"), isOn: $settings.animationsEnabled)
                 Picker(tr("FPS on power", "FPS na zasilaniu"), selection: Self.frames($settings.fpsPower)) {
-                    ForEach(AppSettings.availableFPS, id: \.self) { Text($0 == AppSettings.vsyncFPS ? "VSync" : "\($0)").tag($0) }
+                    ForEach(settings.availableFPS, id: \.self) { Text($0 == AppSettings.vsyncFPS ? "VSync" : "\($0)").tag($0) }
                 }
                 .pickerStyle(.segmented)
                 Picker(tr("FPS on battery", "FPS na baterii"), selection: Self.frames($settings.fpsBattery)) {
-                    ForEach(AppSettings.availableFPS, id: \.self) { Text($0 == AppSettings.vsyncFPS ? "VSync" : "\($0)").tag($0) }
+                    ForEach(settings.availableFPS, id: \.self) { Text($0 == AppSettings.vsyncFPS ? "VSync" : "\($0)").tag($0) }
                 }
                 .pickerStyle(.segmented)
             } header: {
@@ -149,10 +149,11 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 600)
         .frame(minHeight: 360)
+        .onChange(of: settings.lang) { SettingsWindow.retitle() }
     }
 
     private static func frames(_ value: Binding<Int>) -> Binding<Int> {
-        Binding(get: { value.wrappedValue == AppSettings.vsyncFPS ? AppSettings.vsyncFPS : min(value.wrappedValue, AppSettings.displayFPS) }, set: { value.wrappedValue = $0 })
+        Binding(get: { value.wrappedValue == AppSettings.vsyncFPS ? AppSettings.vsyncFPS : min(value.wrappedValue, AppSettings.shared.displayFPS) }, set: { value.wrappedValue = $0 })
     }
 
     private static func multiplier(_ value: Double) -> String {

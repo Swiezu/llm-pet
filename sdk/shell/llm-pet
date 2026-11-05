@@ -6,7 +6,7 @@ file="$HOME/Library/Application Support/llm-pet/server.json"
 [ -f "$file" ] || { echo "llm-pet is not running (no server.json)" >&2; exit 1; }
 port=$(jq -r .port "$file")
 token=$(jq -r .token "$file")
-call() { curl -sS --max-time 3 -X "$1" -H "Authorization: Bearer $token" -H "Content-Type: application/json" ${3:+-d "$3"} "http://127.0.0.1:$port$2"; echo; }
+call() { local code=0; curl -sS --fail-with-body --max-time 3 -X "$1" -H "Authorization: Bearer $token" -H "Content-Type: application/json" ${3:+-d "$3"} "http://127.0.0.1:$port$2" || code=$?; echo; return "$code"; }
 usage() { sed -n 3p "$0" >&2; exit 2; }
 command="${1:-}"
 [ $# -gt 0 ] && shift

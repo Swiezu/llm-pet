@@ -61,6 +61,7 @@ final class Bubble {
 
     @ObservationIgnored var offset: CGFloat?
     @ObservationIgnored var onShow: (() -> Void)?
+    @ObservationIgnored var channel = Channel.mainID
     @ObservationIgnored private var started = false
     @ObservationIgnored private var parked: Date?
     @ObservationIgnored private var phase = Phase.idle
@@ -334,7 +335,9 @@ final class Bubble {
         case .right: frame.width - 16
         }
         if tail != self.tail { self.tail = tail }
-        if window.frame != target { window.setFrame(target, display: true) }
+        if window.frame != target {
+            if window.frame.size == target.size { window.setFrameOrigin(target.origin) } else { window.setFrame(target, display: true) }
+        }
         let interactive = frame.contains(NSEvent.mouseLocation)
         if window.ignoresMouseEvents == interactive { window.ignoresMouseEvents = !interactive }
         if !window.isVisible { window.orderFrontRegardless() }

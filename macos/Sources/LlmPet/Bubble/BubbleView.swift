@@ -193,16 +193,10 @@ struct BubbleView: View {
         Button { bubble.dismiss() } label: {
             ZStack {
                 if !bubble.forever {
-                    ZStack {
-                        Circle().stroke(bubble.foreground.opacity(0.2), lineWidth: 2)
-                        Circle()
-                            .trim(from: 0, to: 1 - bubble.progress)
-                            .stroke(bubble.foreground, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
-                    }
-                    .padding(1)
-                    .scaleEffect(1 + bubble.openness * 0.3)
-                    .opacity(1 - bubble.openness)
+                    Countdown(bubble: bubble)
+                        .padding(1)
+                        .scaleEffect(1 + bubble.openness * 0.3)
+                        .opacity(1 - bubble.openness)
                 }
                 Image(systemName: "xmark")
                     .font(.system(size: 11 * bubble.zoom, weight: .heavy))
@@ -213,6 +207,20 @@ struct BubbleView: View {
         }
         .buttonStyle(.plain)
         .help(tr("Close", "Zamknij"))
+    }
+
+    private struct Countdown: View {
+        let bubble: Bubble
+
+        var body: some View {
+            ZStack {
+                Circle().stroke(bubble.foreground.opacity(0.2), lineWidth: 2)
+                Circle()
+                    .trim(from: 0, to: 1 - bubble.progress)
+                    .stroke(bubble.foreground, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+            }
+        }
     }
 
     private func tail(pointingUp: Bool) -> some View {

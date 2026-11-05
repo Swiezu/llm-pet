@@ -38,8 +38,10 @@ final class Pet {
     @ObservationIgnored private var anchor = (date: Date.now, time: TimeInterval(0), speed: AppSettings.shared.speed)
     @ObservationIgnored private var scaleSpeed: CGFloat = 0
     @ObservationIgnored private var leaving: (() -> Void)?
+    @ObservationIgnored private var display: NSScreen?
 
     var frameSize: CGSize { CGSize(width: Self.size.width * scale, height: Self.size.height * scale) }
+    var isLeaving: Bool { leaving != nil }
 
     func time(_ now: Date) -> TimeInterval {
         anchor.time + now.timeIntervalSince(anchor.date) * anchor.speed
@@ -47,6 +49,11 @@ final class Pet {
 
     func elapsed(_ now: Date) -> TimeInterval {
         time(now) - actionStart
+    }
+
+    func untilIdleChange(_ now: Date) -> TimeInterval {
+        let clock = time(now)
+        return (Idle.change(after: clock) - clock) / anchor.speed
     }
 
     func savePosition() {
@@ -86,7 +93,7 @@ final class Pet {
     @discardableResult
     func say(_ message: String, title: String? = nil, subtitle: String? = nil, style: BubbleStyle = .bubble, for seconds: TimeInterval? = nil, link: URL? = nil, animation: Action? = nil, on channel: Channel = AppSettings.shared.main) -> Int? {
         guard enabled, leaving == nil, !channel.muted else { return nil }
-        return bubbles.say(message, title: title, subtitle: subtitle, style: style, for: seconds, link: link, background: channel.background, foreground: channel.foreground, heading: channel.heading, accent: channel.accent, onShow: animation.map { action in { [weak self] in self?.perform(action) } })
+        return bubbles.say(message, title: title, subtitle: subtitle, style: style, for: seconds, link: link, channel: channel.id, background: channel.background, foreground: channel.foreground, heading: channel.heading, accent: channel.accent, onShow: animation.map { action in { [weak self] in self?.perform(action) } })
     }
 
     func perform(_ next: Action) {
@@ -154,7 +161,8 @@ final class Pet {
         loop = Task { [weak self] in
             while let self, !Task.isCancelled {
                 tick()
-                try? await Task.sleep(for: .seconds(1.0 / Double(max(AppSettings.shared.fps, 1))))
+                let fps = AppSettings.shared.fps
+                try? await Task.sleep(for: .seconds(1.0 / Double(max(calm && !bubbles.speaking ? min(fps, 30) : fps, 1))))
             }
         }
     }
@@ -189,6 +197,10 @@ final class Pet {
 
     private func tick() {
         guard let screen = area else { return }
+        if let current = window?.screen, current !== display {
+            display = current
+            AppSettings.shared.displayFPS = current.maximumFramesPerSecond
+        }
         let now = Date.now
         let k = CGFloat(min(0.1, max(0, now.timeIntervalSince(lastTick))) * 60)
         lastTick = now
@@ -255,15 +267,21 @@ final class Pet {
         x = min(max(x, screen.minX - Self.edge * scale), screen.maxX - size.width + Self.edge * scale)
         y = min(max(y ?? floor, floor), screen.maxY - Self.top * scale)
         let frame = NSRect(x: x.rounded(), y: (y ?? floor).rounded(), width: size.width.rounded(), height: size.height.rounded())
-        if let window, window.frame != frame { window.setFrame(frame, display: true) }
+        if let window, window.frame != frame {
+            if window.frame.size == frame.size { window.setFrameOrigin(frame.origin) } else { window.setFrame(frame, display: true) }
+        }
     }
 
     private func followMouse(_ now: Date) {
         guard let window else { return }
-        let pose = Pose(pet: self, now: now)
-        let body = CGSize(width: Style.canvas.width * Style.unit - 40, height: Style.canvas.height * Style.unit - 40)
-        let rect = NSRect(x: x + ((Self.size.width - body.width) / 2 + pose.dx * facing) * scale, y: (y ?? 0) + (20 + pose.lift) * scale, width: body.width * scale, height: body.height * scale)
-        let interactive = held || rect.contains(NSEvent.mouseLocation)
+        let mouse = NSEvent.mouseLocation
+        var interactive = held
+        if !interactive, window.frame.contains(mouse) {
+            let pose = Pose(pet: self, now: now)
+            let body = CGSize(width: Style.canvas.width * Style.unit - 40, height: Style.canvas.height * Style.unit - 40)
+            let rect = NSRect(x: x + ((Self.size.width - body.width) / 2 + pose.dx * facing) * scale, y: (y ?? 0) + (20 + pose.lift) * scale, width: body.width * scale, height: body.height * scale)
+            interactive = rect.contains(mouse)
+        }
         if window.ignoresMouseEvents == interactive { window.ignoresMouseEvents = !interactive }
     }
 

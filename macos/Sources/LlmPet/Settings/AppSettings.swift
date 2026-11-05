@@ -45,15 +45,15 @@ final class AppSettings {
 
     private(set) var onBattery = AppSettings.batteryPowered()
 
-    static var displayFPS: Int { NSScreen.main?.maximumFramesPerSecond ?? 60 }
+    var displayFPS = NSScreen.main?.maximumFramesPerSecond ?? 60
 
-    static var availableFPS: [Int] { fpsOptions.filter { $0 <= displayFPS } + [vsyncFPS] }
+    var availableFPS: [Int] { Self.fpsOptions.filter { $0 <= displayFPS } + [Self.vsyncFPS] }
 
     var vsync: Bool { (onBattery ? fpsBattery : fpsPower) == Self.vsyncFPS }
 
     var fps: Int {
         let value = onBattery ? fpsBattery : fpsPower
-        return value == Self.vsyncFPS ? Self.displayFPS : min(value, Self.displayFPS)
+        return value == Self.vsyncFPS ? displayFPS : min(value, displayFPS)
     }
 
     var speed: Double { fastMode ? fastSpeed : animationSpeed }
@@ -93,6 +93,8 @@ final class AppSettings {
     var channels: [Channel] {
         didSet {
             save()
+            let live = Set(channels.filter { !$0.muted }.map(\.id))
+            Pet.shared.bubbles.drop { !live.contains($0) }
             for channel in channels {
                 guard let old = oldValue.first(where: { $0.id == channel.id }), old.muted != channel.muted else { continue }
                 Pet.shared.perform(channel.muted ? .mute : .unmute)
