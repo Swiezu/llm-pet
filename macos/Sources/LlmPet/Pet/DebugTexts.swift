@@ -1,4 +1,5 @@
 import Foundation
+import LlmPetRender
 import Observation
 
 enum DebugTexts {

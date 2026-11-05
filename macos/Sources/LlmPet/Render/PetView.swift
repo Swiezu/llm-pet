@@ -1,3 +1,4 @@
+import LlmPetRender
 import SwiftUI
 
 struct PetView: View {
@@ -33,49 +34,42 @@ struct PetView: View {
     }
 }
 
-struct PetFrame: View {
-    let pose: Pose
+struct GhostView: View {
     let action: Action
-    let t: TimeInterval
+    let start: Date
     let clock: TimeInterval
+    let speed: Double
     let facing: CGFloat
-    let grounded: Bool
+    let scale: CGFloat
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Ellipse()
-                .fill(Style.shadow.opacity(grounded && !pose.hidden ? 0.3 * (1 - min(pose.lift, 100) / 140) : 0))
-                .frame(width: 78 * (1 - min(pose.lift, 100) / 250), height: 8)
-                .blur(radius: 3)
-                .offset(x: pose.dx * facing)
-            if let portal = pose.portal, grounded { PortalView(portal: portal, clock: clock) }
-            if let pillar = pose.pillar { PillarView(pillar: pillar, dx: pose.dx * facing, clock: clock) }
-            ItemsView(items: pose.items.filter(\.behind), facing: facing)
-            if pose.flames > 0 { FlameAuraView(intensity: pose.flames, dx: pose.dx * facing, lift: pose.lift, clock: clock) }
-            if action == .party && grounded { ConfettiView(t: t) }
-            if action == .sleep && grounded { SleepView(clock: clock) }
-            SpriteView(pose: pose, t: t, clock: clock)
-                .frame(width: Style.canvas.width * Style.unit, height: Style.canvas.height * Style.unit)
-                .brightness(pose.glow)
-                .scaleEffect(x: facing * pose.sx * (pose.flip ? -1 : 1), y: pose.sy, anchor: .bottom)
-                .rotationEffect(.degrees(pose.tilt * (pose.carried ? 1 : Double(facing))), anchor: pose.tiltAnchor)
-                .offset(x: pose.dx * facing, y: -pose.lift + 0.5 * Style.unit)
-                .opacity(pose.hidden ? 0 : 1)
-                .contentShape(Rectangle().inset(by: 20).offset(x: pose.dx * facing, y: -pose.lift))
-                .frame(width: Pet.size.width, height: Pet.size.height, alignment: .bottom)
-                .mask(alignment: .leading) {
-                    Rectangle().padding(.leading, pose.mask.map { Pet.size.width / 2 + $0 * facing } ?? 0)
-                }
-                .mask {
-                    if let amount = pose.dissolve { DissolveMask(amount: amount, dx: pose.dx * facing, lift: pose.lift) } else { Rectangle() }
-                }
-            if let flying = pose.flying { FlyingView(flying: flying, facing: facing) }
-            ItemsView(items: pose.items.filter { !$0.behind }, facing: facing)
-            if let beam = pose.beam { BeamView(beam: beam, facing: facing, clock: clock) }
-            if let shockwave = pose.shockwave { ShockwaveView(progress: shockwave, dx: pose.dx * facing, lift: pose.lift) }
-            if let pillar = pose.pillar { PillarView(pillar: pillar, dx: pose.dx * facing, clock: clock, front: true) }
-            if let cloud = pose.cloud { CloudView(cloud: cloud, facing: facing) }
+        TimelineView(.animation) { _ in
+            let t = Date.now.timeIntervalSince(start) * speed
+            PetFrame(pose: Pose(action: action, t: t, clock: clock + t), action: action, t: t, clock: clock + t, facing: facing, grounded: true)
+                .scaleEffect(scale, anchor: .bottom)
+                .frame(width: PetFrame.size.width * scale, height: PetFrame.size.height * scale, alignment: .bottom)
+                .drawingGroup()
         }
-        .frame(width: Pet.size.width, height: Pet.size.height, alignment: .bottom)
+    }
+}
+
+extension Pose {
+    @MainActor
+    init(pet: Pet, now: Date) {
+        let clock = pet.time(now)
+        if !AppSettings.shared.animationsEnabled {
+            self.init()
+        } else if pet.held || pet.falling {
+            self.init()
+            carry(held: pet.held, clock: clock)
+        } else if let landed = pet.landStart, now.timeIntervalSince(landed) < 0.3 {
+            self.init()
+            land(now.timeIntervalSince(landed))
+        } else if now < pet.resizeUntil {
+            self.init()
+            resize(growing: pet.growing, clock: clock)
+        } else {
+            self.init(action: pet.action, t: pet.elapsed(now), clock: clock, walked: pet.walked)
+        }
     }
 }

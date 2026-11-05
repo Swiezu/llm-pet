@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension Pose {
-    mutating func carry(held: Bool, clock: TimeInterval) {
+    package mutating func carry(held: Bool, clock: TimeInterval) {
         carried = true
         left = .flail
         right = .flail
@@ -17,7 +17,7 @@ extension Pose {
         }
     }
 
-    mutating func land(_ elapsed: TimeInterval) {
+    package mutating func land(_ elapsed: TimeInterval) {
         let k = sin(.pi * elapsed / 0.3)
         sx = 1 + 0.08 * k
         sy = 1 - 0.1 * k

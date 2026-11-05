@@ -1,4 +1,5 @@
 import AppKit
+import LlmPetRender
 import Observation
 import SwiftUI
 
@@ -6,7 +7,7 @@ import SwiftUI
 @Observable
 final class Pet {
     static let shared = Pet()
-    static let size = CGSize(width: 360, height: 320)
+    static let size = PetFrame.size
     static let drop: CGFloat = 8
     static let edge = (size.width - Style.canvas.width * Style.unit) / 2 + 3 * Style.unit
     static let top: CGFloat = 85
@@ -39,9 +40,13 @@ final class Pet {
     @ObservationIgnored private var scaleSpeed: CGFloat = 0
     @ObservationIgnored private var leaving: (() -> Void)?
     @ObservationIgnored private var display: NSScreen?
+    @ObservationIgnored private var dock: (frame: NSRect, pid: pid_t)?
+    @ObservationIgnored private var ghost: NSPanel?
+    @ObservationIgnored private var quiet = false
 
     var frameSize: CGSize { CGSize(width: Self.size.width * scale, height: Self.size.height * scale) }
     var isLeaving: Bool { leaving != nil }
+    var isDocked: Bool { dock != nil }
 
     func time(_ now: Date) -> TimeInterval {
         anchor.time + now.timeIntervalSince(anchor.date) * anchor.speed
@@ -97,11 +102,43 @@ final class Pet {
     }
 
     func perform(_ next: Action) {
-        guard enabled, leaving == nil, !held, !falling, AppSettings.shared.animationsEnabled || next == .idle else { return }
+        guard enabled, leaving == nil, !held, !falling, AppSettings.shared.animationsEnabled || next == .idle, dock == nil || next != .walk else { return }
         if next == .walk, let screen = area {
             target = .random(in: (screen.minX - Self.edge * scale)...(screen.maxX - frameSize.width + Self.edge * scale))
         }
         start(next)
+    }
+
+    func dock(_ frame: NSRect, pid: pid_t) -> Bool {
+        guard enabled, leaving == nil else { return false }
+        let entering = dock == nil
+        dock = (frame, pid)
+        guard entering else { return true }
+        held = false
+        falling = false
+        bubbles.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
+        if let window {
+            savePosition()
+            if AppSettings.shared.animationsEnabled, let exit = Action.exits.randomElement() { vanish(window, with: exit) } else { window.orderOut(nil) }
+            self.window = nil
+        }
+        run()
+        if AppSettings.shared.animationsEnabled {
+            start(Action.entrances.randomElement() ?? .teleport)
+            quiet = true
+        } else {
+            start(.idle)
+        }
+        return true
+    }
+
+    func undock() {
+        guard dock != nil else { return }
+        dock = nil
+        bubbles.level = .statusBar
+        ghost?.orderOut(nil)
+        ghost = nil
+        show(greeting: false)
     }
 
     func poke() {
@@ -133,13 +170,13 @@ final class Pet {
         start(.idle)
     }
 
-    private func show() {
+    private func show(greeting: Bool = true) {
         if leaving != nil {
             leaving = nil
             perform(Action.entrances.randomElement() ?? .teleport)
             return
         }
-        guard window == nil else { return }
+        guard window == nil, dock == nil else { return }
         scale = CGFloat(AppSettings.shared.petScale)
         scaleSpeed = 0
         let panel = NSPanel(contentRect: NSRect(origin: .zero, size: frameSize), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -154,10 +191,16 @@ final class Pet {
         lastTick = .now
         if AppSettings.shared.animationsEnabled {
             perform(Action.entrances.randomElement() ?? .teleport)
+            quiet = !greeting
         } else {
             start(.idle)
-            say(DebugTexts.greeting(AppSettings.shared.lang))
+            if greeting { say(DebugTexts.greeting(AppSettings.shared.lang)) }
         }
+        run()
+    }
+
+    private func run() {
+        guard loop == nil else { return }
         loop = Task { [weak self] in
             while let self, !Task.isCancelled {
                 tick()
@@ -173,18 +216,37 @@ final class Pet {
         loop = nil
         window?.orderOut(nil)
         window = nil
+        dock = nil
+        ghost?.orderOut(nil)
+        ghost = nil
+        bubbles.level = .statusBar
         bubbles.close()
+    }
+
+    private func vanish(_ panel: NSPanel, with exit: Action) {
+        let now = Date.now
+        panel.ignoresMouseEvents = true
+        panel.contentView = NSHostingView(rootView: GhostView(action: exit, start: now, clock: time(now), speed: anchor.speed, facing: exit == .portalOut ? 1 : facing, scale: scale))
+        ghost = panel
+        let duration = exit.duration / anchor.speed
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(duration))
+            panel.orderOut(nil)
+            if self?.ghost === panel { self?.ghost = nil }
+        }
     }
 
     private func start(_ next: Action) {
         if next == .teleport || next == .portalOut { facing = 1 }
         action = next
         actionStart = time(.now)
+        quiet = false
         if calm { calm = false }
     }
 
     private func finish() {
         let ended = action
+        let greet = !quiet
         if let leaving {
             self.leaving = nil
             hide()
@@ -192,10 +254,14 @@ final class Pet {
             return
         }
         start(.idle)
-        if Action.entrances.contains(ended) { say(DebugTexts.greeting(AppSettings.shared.lang)) }
+        if Action.entrances.contains(ended), greet { say(DebugTexts.greeting(AppSettings.shared.lang)) }
     }
 
     private func tick() {
+        if let dock {
+            tick(docked: dock)
+            return
+        }
         guard let screen = area else { return }
         if let current = window?.screen, current !== display {
             display = current
@@ -251,13 +317,34 @@ final class Pet {
         place(screen, floor: floor)
     }
 
+    private func tick(docked: (frame: NSRect, pid: pid_t)) {
+        guard kill(docked.pid, 0) == 0 else {
+            undock()
+            return
+        }
+        let now = Date.now
+        lastTick = now
+        let rate = AppSettings.shared.speed
+        if rate != anchor.speed { anchor = (now, time(now), rate) }
+        if !AppSettings.shared.animationsEnabled, action != .idle { start(.idle) }
+        bubbles.update(now)
+        if elapsed(now) >= action.duration { finish() }
+        let center = NSPoint(x: docked.frame.midX, y: docked.frame.midY)
+        guard let screen = NSScreen.screens.first(where: { NSMouseInRect(center, $0.frame, false) }) ?? NSScreen.main else { return }
+        let lift = action == .hop ? Hop.lift(elapsed(now)) : 0
+        bubbles.place(on: Self.area(of: screen), center: docked.frame.midX, bottom: docked.frame.minY, head: docked.frame.minY + (58 + lift) * docked.frame.height / Self.size.height)
+    }
+
     private var screen: NSScreen? {
         let point = held ? NSEvent.mouseLocation : CGPoint(x: x + frameSize.width / 2, y: (y ?? 0) + Self.top / 2 * scale)
         return NSScreen.screens.first { NSMouseInRect(point, $0.frame, false) } ?? window?.screen ?? NSScreen.main
     }
 
     private var area: NSRect? {
-        guard let screen else { return nil }
+        screen.map(Self.area)
+    }
+
+    private static func area(of screen: NSScreen) -> NSRect {
         let full = screen.frame
         return NSRect(x: full.minX, y: full.minY, width: full.width, height: screen.visibleFrame.maxY - full.minY)
     }

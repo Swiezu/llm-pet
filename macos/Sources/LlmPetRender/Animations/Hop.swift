@@ -1,9 +1,9 @@
 import Foundation
 
-enum Hop {
+package enum Hop {
     static let duration = 0.9
 
-    static func lift(_ t: TimeInterval) -> CGFloat {
+    package static func lift(_ t: TimeInterval) -> CGFloat {
         let p = (t / duration).truncatingRemainder(dividingBy: 1)
         guard p >= 0.15, p < 0.88 else { return 0 }
         return 95 * sin(.pi * (p - 0.15) / 0.73)

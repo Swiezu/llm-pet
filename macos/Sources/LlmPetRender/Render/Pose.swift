@@ -1,8 +1,8 @@
 import SwiftUI
 
-struct Pose {
-    enum Eyes { case open, blink, happy, closed, wide, dizzy, focused, led, stoned }
-    enum Arm: Equatable { case side, up, flail, hidden, diagUp, diagDown, tucked, reach(CGFloat), chin }
+public struct Pose {
+    package enum Eyes { case open, blink, happy, closed, wide, dizzy, focused, led, stoned }
+    package enum Arm: Equatable { case side, up, flail, hidden, diagUp, diagDown, tucked, reach(CGFloat), chin }
     enum Band { case none, grab, grabUp, hand, hanging, raised, tilted(CGFloat), line, head, ring(Ring) }
     enum Bells { case none, sides, floor }
     enum Letter { case raised, envelope, opening(CGFloat), reading }
@@ -64,8 +64,8 @@ struct Pose {
         var power: CGFloat = 1
     }
 
-    var lift: CGFloat = 0
-    var dx: CGFloat = 0
+    package var lift: CGFloat = 0
+    package var dx: CGFloat = 0
     var hidden = false
     var mask: CGFloat?
     var keyboard: Keyboard?
@@ -78,11 +78,11 @@ struct Pose {
     var legs: [CGFloat] = [0, 0, 0, 0]
     var legLength: CGFloat = 1.2
     var bob: CGFloat = 0
-    var eyes = Eyes.open
+    package var eyes = Eyes.open
     var look: CGFloat = 0
     var lookY: CGFloat = 0
     var left = Arm.side
-    var right = Arm.side
+    package var right = Arm.side
     var flag = false
     var band = Band.none
     var bells = Bells.none
@@ -116,4 +116,6 @@ struct Pose {
     var cloud: Cloud?
     var dissolve: CGFloat?
     var glow: Double = 0
+
+    public init() {}
 }

@@ -5,9 +5,11 @@ let package = Package(
     name: "llm-pet",
     platforms: [.macOS(.v26)],
     products: [
-        .executable(name: "llm-pet", targets: ["LlmPet"])
+        .executable(name: "llm-pet", targets: ["LlmPet"]),
+        .library(name: "LlmPetRender", targets: ["LlmPetRender"])
     ],
     targets: [
-        .executableTarget(name: "LlmPet", path: "Sources/LlmPet")
+        .target(name: "LlmPetRender", path: "Sources/LlmPetRender"),
+        .executableTarget(name: "LlmPet", dependencies: ["LlmPetRender"], path: "Sources/LlmPet")
     ]
 )

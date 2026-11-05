@@ -1,4 +1,5 @@
 import AppKit
+import LlmPetRender
 import SwiftUI
 
 @main

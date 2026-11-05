@@ -1,7 +1,7 @@
 import Foundation
 
 extension Pose {
-    init(action: Action, t: TimeInterval, clock: TimeInterval, walked: CGFloat = 0) {
+    public init(action: Action, t: TimeInterval, clock: TimeInterval, walked: CGFloat = 0) {
         self.init()
         if clock.truncatingRemainder(dividingBy: Idle.blink.every) < Idle.blink.length { eyes = .blink }
         switch action {
@@ -39,25 +39,6 @@ extension Pose {
         case .beamUp: beamUp(t: t, clock: clock)
         case .poof: poof(t: t, clock: clock)
         case .flyAway: flyAway(t: t, clock: clock)
-        }
-    }
-
-    @MainActor
-    init(pet: Pet, now: Date) {
-        let clock = pet.time(now)
-        if !AppSettings.shared.animationsEnabled {
-            self.init()
-        } else if pet.held || pet.falling {
-            self.init()
-            carry(held: pet.held, clock: clock)
-        } else if let landed = pet.landStart, now.timeIntervalSince(landed) < 0.3 {
-            self.init()
-            land(now.timeIntervalSince(landed))
-        } else if now < pet.resizeUntil {
-            self.init()
-            resize(growing: pet.growing, clock: clock)
-        } else {
-            self.init(action: pet.action, t: pet.elapsed(now), clock: clock, walked: pet.walked)
         }
     }
 }

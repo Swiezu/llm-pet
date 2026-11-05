@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 public enum LlmPetError: Error, Sendable {
@@ -12,6 +13,18 @@ public struct LlmPetStatus: Decodable, Sendable {
     public let bubbles: Int
     public let queued: Int
     public let fps: Int
+}
+
+public struct LlmPetState: Decodable, Sendable {
+    public let enabled: Bool
+    public let docked: Bool
+    public let pid: Int32
+    public let action: String
+    public let t: Double
+    public let clock: Double
+    public let speed: Double
+    public let facing: Double
+    public let animations: Bool
 }
 
 public struct LlmPetAction: Decodable, Sendable {
@@ -93,6 +106,18 @@ public struct LlmPet: Sendable {
 
     public func status() async throws -> LlmPetStatus {
         try decode(LlmPetStatus.self, try await send("GET", "/status", nil))
+    }
+
+    public func state() async throws -> LlmPetState {
+        try decode(LlmPetState.self, try await send("GET", "/pet", nil))
+    }
+
+    public func dock(_ frame: CGRect, pid: Int32 = ProcessInfo.processInfo.processIdentifier) async throws {
+        _ = try await send("POST", "/dock", ["x": frame.minX, "y": frame.minY, "width": frame.width, "height": frame.height, "pid": pid])
+    }
+
+    public func undock() async throws {
+        _ = try await send("POST", "/undock", nil)
     }
 
     private func decode<T: Decodable>(_ type: T.Type, _ data: Data) throws -> T {

@@ -1,11 +1,17 @@
 import SwiftUI
 
-struct SpriteView: View {
+package struct SpriteView: View {
     let pose: Pose
     let t: TimeInterval
     let clock: TimeInterval
 
-    var body: some View {
+    package init(pose: Pose, t: TimeInterval, clock: TimeInterval) {
+        self.pose = pose
+        self.t = t
+        self.clock = clock
+    }
+
+    package var body: some View {
         Canvas { context, _ in
             let u = Style.unit
             func box(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, _ color: Color) {

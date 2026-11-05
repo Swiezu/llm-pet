@@ -63,10 +63,13 @@ Speech bubble (separate window, keeps to screen edges, flips below the head when
 | `poof` | exit: a wave, a crouch, a little jump and gone in a puff of smoke with sparkles |
 | `flyaway` | exit: "!", a jump, a puff of smoke, Claude turns into a little bird that flies off to the top right, a feather floats down |
 
-All animations use the same sprite on the same pixel grid (`Style.unit`); props (envelope, sheet, plane, bulb, portal, rocket, mug…) are pixel art in half sprite pixels (`Render/PixelArt.swift`, `Render/Props.swift`). The pet window is 360×320 pt to fit the portal, beams and flights.
+All animations use the same sprite on the same pixel grid (`Style.unit`); props (envelope, sheet, plane, bulb, portal, rocket, mug…) are pixel art in half sprite pixels (`LlmPetRender/Render/PixelArt.swift`, `LlmPetRender/Render/Props.swift`). The pet window is 360×320 pt to fit the portal, beams and flights.
 
 ## API
-On launch an HTTP server starts on `127.0.0.1` with a token in `~/Library/Application Support/llm-pet/server.json`: messages (with channel and animation), animations, channels (list, add, delete), show and hide. Reference and clients in [`../sdk/README.md`](../sdk/README.md), MCP in [`../mcp/README.md`](../mcp/README.md).
+On launch an HTTP server starts on `127.0.0.1` with a token in `~/Library/Application Support/llm-pet/server.json`: messages (with channel and animation), animations, channels (list, add, delete), show and hide, and docking into another app. Reference and clients in [`../sdk/README.md`](../sdk/README.md), MCP in [`../mcp/README.md`](../mcp/README.md).
+
+## Docking
+Another app can take the pet into its window: it draws `PetFrame` from `LlmPetRender` where the pet should stand and calls `POST /dock` with that frame in screen coordinates and its pid (Swift: `LlmPet().dock(frame)`). The desktop pet leaves with a random exit (a ghost window plays it) while its state (action, time) keeps running in the app, and the other app draws it from `GET /pet` (`LlmPet().state()`), starting with a random entrance. Bubbles, API actions and channels work as usual: bubbles sit above the docked frame, one window level above `.statusBar`. `walk` is ignored while docked. `POST /undock` (or the docking app quitting) brings the pet back to its desktop spot with an entrance; neither move shows the greeting. Hiding the pet ends docking.
 
 ## Build and run
 ```bash
@@ -77,31 +80,33 @@ Bundle id: `pl.frostbyte.llm-pet`. Requires macOS 26+ and Swift 6.2+ (Command Li
 
 Frames without a screen: `swift build && .build/debug/llm-pet --dump-frames <dir>` writes `<name>.png` with 18 timed frames for every animation (`Pet/FrameDump.swift`); `--render-docs <dir>` writes the logo and the GIFs used in the main README (also `resize.gif`) (`Pet/DocsRender.swift`).
 
-## Code (`macos/Sources/LlmPet/`)
+## Code
+Two targets: `LlmPetRender` (library, `macos/Sources/LlmPetRender/`: `Action`, `Pose`, the animations and `PetFrame`, everything needed to draw the pet; product for other apps) and `LlmPet` (the app, `macos/Sources/LlmPet/`). `PetFrame(pose: Pose(action:t:clock:), ...)` draws one frame from time alone, so another app (e.g. a dashboard) can draw the same pet in its own SwiftUI view.
+
 | directory / file | what |
 |---|---|
 | `LlmPetApp.swift` | app entry, menu bar menu with the DEBUG items, first launch language choice |
 | `Pet/Pet.swift` | pet state, window, movement loop (walk, drop, drag), entrance on show and exit on hide or quit, spring scaling to the size from the settings |
-| `Pet/Action.swift` | animations: API name, localized title, category for the DEBUG menu, duration, click tricks |
+| `LlmPetRender/Action.swift`, `Pet/Action.swift` | animations: API name, category for the DEBUG menu, duration, click tricks; localized titles in the app |
 | `Pet/DebugTexts.swift` | test texts, the greeting (English and Polish) and the DEBUG TEXT options (`DebugBubble`) |
 | `Pet/FrameDump.swift` | `--dump-frames`: animation frame sheets as PNG |
 | `Pet/DocsRender.swift` | `--render-docs`: logo and animation GIFs for `docs/` |
 | `Settings/` | `AppSettings` (language, FPS, channels, pet size, bubble text size), `Language` (translations and first launch picker), `Channel` (color, mute), `SettingsView`, `SettingsWindow` |
 | `Server/` | `PetServer` (HTTP on loopback, Network.framework, token), `ServerInfo` (`server.json`) |
 | `Bubble/` | speech bubbles: `Bubble` (one bubble: text, colors, typing and erasing phases, countdown, link, window), `BubbleStack` (how many on screen, order, queue, scrolling, layout), `BubbleView` |
-| `Render/Pose.swift` | one frame: eyes, arms, props, offsets, scale, legs, scene items |
-| `Render/SpriteView.swift` | draws Clawd from a `Pose` (Canvas) |
-| `Render/PetView.swift` | `PetView` (frame clock from settings, gestures) and `PetFrame` (one frame: shadow, effects, sprite, portal mask, flying props) |
-| `Render/Effects.swift` | effects around the pet: confetti, sleep "z", portal, pillar of light, smoke puff, dissolve mask, flying envelope and plane, beam, flame aura, shockwave, scene items |
-| `Render/PixelArt.swift`, `Render/Props.swift` | pixel art props and their palette |
-| `Render/Style.swift` | pixel size, canvas, colors |
-| `Animations/Choreography.swift` | picks the pose for the pet state and action |
-| `Animations/Stage.swift` | scene props (`Pose.items`): placement relative to the pet, context bar, easing |
-| `Animations/<Action>.swift` | one animation = one file with a `mutating func` on `Pose` |
-| `Animations/Resize.swift` | pose while the pet changes size (not an API action): straining when it grows, squeezing when it shrinks |
+| `LlmPetRender/Render/Pose.swift` | one frame: eyes, arms, props, offsets, scale, legs, scene items |
+| `LlmPetRender/Render/SpriteView.swift` | draws Clawd from a `Pose` (Canvas) |
+| `Render/PetView.swift`, `LlmPetRender/Render/PetFrame.swift` | `PetView` (frame clock from settings, gestures, `Pose(pet:now:)`, `GhostView` for the exit when docking) and `PetFrame` (one frame: shadow, effects, sprite, portal mask, flying props) |
+| `LlmPetRender/Render/Effects.swift` | effects around the pet: confetti, sleep "z", portal, pillar of light, smoke puff, dissolve mask, flying envelope and plane, beam, flame aura, shockwave, scene items |
+| `LlmPetRender/Render/PixelArt.swift`, `LlmPetRender/Render/Props.swift` | pixel art props and their palette |
+| `LlmPetRender/Render/Style.swift` | pixel size, canvas, colors |
+| `LlmPetRender/Animations/Choreography.swift` | picks the pose for the pet state and action |
+| `LlmPetRender/Animations/Stage.swift` | scene props (`Pose.items`): placement relative to the pet, context bar, easing |
+| `LlmPetRender/Animations/<Action>.swift` | one animation = one file with a `mutating func` on `Pose` |
+| `LlmPetRender/Animations/Resize.swift` | pose while the pet changes size (not an API action): straining when it grows, squeezing when it shrinks |
 
 ## New animation
-1. A `case` in `Pet/Action.swift` with `title` (English and Polish), `category` and `duration` (optionally in `tricks`); it shows up in its category in the DEBUG ANIMATION menu and the API automatically.
-2. `Animations/<Name>.swift`: `extension Pose { mutating func <name>(t: TimeInterval, clock: TimeInterval) }`.
-3. A branch in `Animations/Choreography.swift`; new props: a field in `Pose` drawn in `SpriteView` or scene items via `place(...)` (art in `Render/Props.swift`), effects in `Effects.swift`.
+1. A `case` in `LlmPetRender/Action.swift` with `category` and `duration`, and its `title` (English and Polish) in `Pet/Action.swift` (optionally in `tricks`); it shows up in its category in the DEBUG ANIMATION menu and the API automatically.
+2. `LlmPetRender/Animations/<Name>.swift`: `extension Pose { mutating func <name>(t: TimeInterval, clock: TimeInterval) }`.
+3. A branch in `LlmPetRender/Animations/Choreography.swift`; new props: a field in `Pose` drawn in `SpriteView` or scene items via `place(...)` (art in `Render/Props.swift`), effects in `Effects.swift`.
 4. Check the frames with `--dump-frames` and refresh the README GIFs with `--render-docs docs`.

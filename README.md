@@ -51,6 +51,7 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 - **English and Polish** UI, chosen on first launch.
 - **Settings**: language, channels, pet size (50-200%, animated live), bubble text size, max bubble width and height (collapsed and expanded), bubbles on screen and their order, animation speed (normal and fast mode), frame rate separately on power and on battery (15, 30, 60, 120, 144… up to what the display supports, or VSync).
 - **Local HTTP API** on `127.0.0.1` only, token protected, with JS, Swift and shell SDKs and an MCP server.
+- **Docking**: another app can take the pet into its own window (`LlmPetRender` library + `POST /dock`), and it comes back to the desktop when that app lets go.
 - **DEBUG menu** to preview animations by category, and test texts with combinable options (title, link, time, style, channel).
 
 ## Install

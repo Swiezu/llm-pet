@@ -1,4 +1,5 @@
 import Foundation
+import LlmPetRender
 import Network
 
 @MainActor
@@ -68,7 +69,17 @@ final class PetServer {
         let path = request.path.split(separator: "?").first.map(String.init) ?? request.path
         switch (request.method, path) {
         case ("GET", "/status"):
-            return .json(["enabled": pet.enabled, "action": pet.action.rawValue, "speaking": pet.bubbles.speaking, "bubbles": pet.bubbles.active.count, "queued": pet.bubbles.queued, "fps": settings.fps, "vsync": settings.vsync, "animations": settings.animationsEnabled, "speed": settings.speed])
+            return .json(["enabled": pet.enabled, "docked": pet.isDocked, "action": pet.action.rawValue, "speaking": pet.bubbles.speaking, "bubbles": pet.bubbles.active.count, "queued": pet.bubbles.queued, "fps": settings.fps, "vsync": settings.vsync, "animations": settings.animationsEnabled, "speed": settings.speed])
+        case ("GET", "/pet"):
+            let now = Date.now
+            return .json(["enabled": pet.enabled, "docked": pet.isDocked, "pid": ProcessInfo.processInfo.processIdentifier, "action": pet.action.rawValue, "t": pet.elapsed(now), "clock": pet.time(now), "speed": settings.speed, "facing": Double(pet.facing), "animations": settings.animationsEnabled])
+        case ("POST", "/dock"):
+            guard let body = request.json, let x = body["x"] as? Double, let y = body["y"] as? Double, let width = body["width"] as? Double, let height = body["height"] as? Double, width > 0, height > 0, let pid = body["pid"] as? Int32 else { return .error(400, "fields x, y, width, height and pid are required") }
+            guard pet.dock(NSRect(x: x, y: y, width: width, height: height), pid: pid) else { return .error(409, "pet is hidden") }
+            return .json(["ok": true])
+        case ("POST", "/undock"):
+            pet.undock()
+            return .json(["ok": true])
         case ("GET", "/actions"):
             return .json(["actions": Action.allCases.map(Self.describe)])
         case ("GET", "/channels"):

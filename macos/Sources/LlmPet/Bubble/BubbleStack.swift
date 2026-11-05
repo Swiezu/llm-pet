@@ -16,6 +16,8 @@ final class BubbleStack {
     private var lastPlace = Date.now
     private var monitor: Any?
 
+    var level = NSWindow.Level.statusBar
+
     var speaking: Bool { !items.isEmpty }
     var queued: Int { items.count - active.count }
 
@@ -96,7 +98,7 @@ final class BubbleStack {
             let margin = 4 + abs(shift)
             let x = min(max(center - size.width / 2, screen.minX + margin), screen.maxX - size.width - margin) + shift
             let y = below ? max(screen.minY, bottom - size.height + 10 - current) : head + current
-            bubble.move(to: NSRect(x: x, y: y, width: size.width, height: size.height), center: center, screen: screen)
+            bubble.move(to: NSRect(x: x, y: y, width: size.width, height: size.height), center: center, screen: screen, level: level)
             offset += size.height + gap(bubble)
         }
     }

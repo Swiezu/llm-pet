@@ -1,8 +1,8 @@
 import SwiftUI
 
-enum Style {
-    static let unit: CGFloat = 7
-    static let canvas = CGSize(width: 18, height: 15)
+package enum Style {
+    package static let unit: CGFloat = 7
+    package static let canvas = CGSize(width: 18, height: 15)
     static let origin = CGPoint(x: 3, y: 7)
     static let coral = Color(red: 0.85, green: 0.47, blue: 0.34)
     static let shade = Color(red: 0.70, green: 0.36, blue: 0.25)

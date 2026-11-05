@@ -1,5 +1,6 @@
 import AppKit
 import IOKit.ps
+import LlmPetRender
 import Observation
 
 @MainActor

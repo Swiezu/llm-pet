@@ -1,7 +1,7 @@
 import Foundation
 
 extension Pose {
-    mutating func resize(growing: Bool, clock: TimeInterval) {
+    package mutating func resize(growing: Bool, clock: TimeInterval) {
         let shake: CGFloat = Int(clock / 0.05) % 2 == 0 ? 0.5 : -0.5
         if growing {
             eyes = .focused

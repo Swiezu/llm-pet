@@ -314,8 +314,9 @@ final class Bubble {
         return NSSize(width: ceil(measured.width), height: ceil(measured.height))
     }
 
-    func move(to frame: NSRect, center: CGFloat, screen: NSRect) {
+    func move(to frame: NSRect, center: CGFloat, screen: NSRect, level: NSWindow.Level) {
         guard let window else { return }
+        if window.level != level { window.level = level }
         let canvas = NSSize(
             width: max(frame.width, ceil(measured.width + max(folded.width, unfolded.width) - width - 0.01)),
             height: max(frame.height, ceil(measured.height + max(folded.height, unfolded.height) - textHeight - 0.01))
