@@ -43,15 +43,15 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 - **Header**: an optional `title` (bold, top left) and `subtitle` (top right next to the X), e.g. the project and the branch; their colors and the "more" color are set per channel.
 - **Style**: `bubble` (default) or `left` / `right`, chat-like messages on one side, so a conversation reads left (incoming) and right (reply).
 - **Duration and links**: every bubble has an X in the corner, with a ring around it counting down until the bubble disappears; `seconds: 0` keeps it until you click X; an optional link (URL, deep link or file path) at the bottom right opens on click.
-- **Long messages**: line breaks are kept; text taller than the bubble gets "more", which smoothly expands it to the full text (up to twice as wide, scrollable when it does not fit on screen), pauses the countdown and shows X; "less" collapses it and the countdown resumes.
+- **Long messages**: line breaks are kept; text taller than the bubble gets "more", which smoothly expands it to the full text (up to the max expanded width and height from the settings and the room on screen; longer text scrolls, with a scrollbar under the X), pauses the countdown and shows X; "less" collapses it and the countdown resumes.
 - **Muting only by the user** (settings, menu bar or the right-click menu on the pet), so neither an LLM nor another app can get around it; Clawd plays a mute or unmute animation.
 - **34 animations** triggered from the menu, the API, an SDK or MCP; clicking the pet plays a random trick; animation speed, a fast mode and an animations off switch.
 - **Right-click menu**: right-clicking the pet opens the same menu as the menu bar paw.
 - **Drag and drop**: grab the pet and move it; on release it settles right where you left it, and it remembers the spot after hiding or quitting.
 - **English and Polish** UI, chosen on first launch.
-- **Settings**: language, channels, pet size (50-200%, animated live), bubble text size, max bubble width and height, animation speed (normal and fast mode), frame rate separately on power and on battery (15, 30, 60, 120, 144… up to what the display supports, or VSync).
+- **Settings**: language, channels, pet size (50-200%, animated live), bubble text size, max bubble width and height (collapsed and expanded), animation speed (normal and fast mode), frame rate separately on power and on battery (15, 30, 60, 120, 144… up to what the display supports, or VSync).
 - **Local HTTP API** on `127.0.0.1` only, token protected, with JS, Swift and shell SDKs and an MCP server.
-- **DEBUG menu** to preview animations, texts and channel colors.
+- **DEBUG menu** to preview animations by category, and test texts with combinable options (title, link, time, style, channel).
 
 ## Install
 
@@ -76,7 +76,7 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 | menu bar (paw) or right-click on the pet | what it does |
 |---|---|
 | Show / Hide pet | showing plays a random entrance (portal, pillar of light, poof, bird), hiding a random exit |
-| Settings… (⌘,) | language, channels (name, color, mute, delete), pet size, bubble text size, max bubble width and height, animation speed, VSync, frame rate on power and on battery |
+| Settings… (⌘,) | language, channels (name, color, mute, delete), pet size, bubble text size, max bubble width and height (collapsed and expanded), animation speed, VSync, frame rate on power and on battery |
 | Animations / Fast mode | switches: animations off (the pet just stands still), fast mode (the fast speed from the settings) |
 | Channels | one switch per channel: on = shown, off = muted |
 | DEBUG ANIMATION / TEXT | preview animations by category, and test texts with options (title, link, time, style, channel) |
