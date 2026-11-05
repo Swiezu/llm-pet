@@ -9,6 +9,7 @@ final class Pet {
     static let size = CGSize(width: 360, height: 320)
     static let drop: CGFloat = 8
     static let edge = (size.width - Style.canvas.width * Style.unit) / 2 + 3 * Style.unit
+    static let top: CGFloat = 85
 
     private(set) var enabled = UserDefaults.standard.object(forKey: "petEnabled") as? Bool ?? true
     private(set) var action = Action.idle
@@ -90,7 +91,7 @@ final class Pet {
 
     func perform(_ next: Action) {
         guard enabled, leaving == nil, !held, !falling, AppSettings.shared.animationsEnabled || next == .idle else { return }
-        if next == .walk, let screen = screen?.visibleFrame {
+        if next == .walk, let screen = area {
             target = .random(in: (screen.minX - Self.edge * scale)...(screen.maxX - frameSize.width + Self.edge * scale))
         }
         start(next)
@@ -187,7 +188,7 @@ final class Pet {
     }
 
     private func tick() {
-        guard let screen = screen?.visibleFrame else { return }
+        guard let screen = area else { return }
         let now = Date.now
         let k = CGFloat(min(0.1, max(0, now.timeIntervalSince(lastTick))) * 60)
         lastTick = now
@@ -239,14 +240,20 @@ final class Pet {
     }
 
     private var screen: NSScreen? {
-        let point = held ? NSEvent.mouseLocation : CGPoint(x: x + frameSize.width / 2, y: (y ?? 0) + frameSize.height / 2)
+        let point = held ? NSEvent.mouseLocation : CGPoint(x: x + frameSize.width / 2, y: (y ?? 0) + Self.top / 2 * scale)
         return NSScreen.screens.first { NSMouseInRect(point, $0.frame, false) } ?? window?.screen ?? NSScreen.main
+    }
+
+    private var area: NSRect? {
+        guard let screen else { return nil }
+        let full = screen.frame
+        return NSRect(x: full.minX, y: full.minY, width: full.width, height: screen.visibleFrame.maxY - full.minY)
     }
 
     private func place(_ screen: NSRect, floor: CGFloat) {
         let size = frameSize
         x = min(max(x, screen.minX - Self.edge * scale), screen.maxX - size.width + Self.edge * scale)
-        y = min(max(y ?? floor, floor), screen.maxY - size.height)
+        y = min(max(y ?? floor, floor), screen.maxY - Self.top * scale)
         let frame = NSRect(x: x.rounded(), y: (y ?? floor).rounded(), width: size.width.rounded(), height: size.height.rounded())
         if let window, window.frame != frame { window.setFrame(frame, display: true) }
     }

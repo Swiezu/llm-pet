@@ -128,6 +128,6 @@ final class DebugBubble {
     }
 
     func queue() {
-        for index in 1...5 { say(tr("Bubble \(index) of 5", "Dymek \(index) z 5"), for: 4) }
+        for index in 1...12 { say(tr("Bubble \(index) of 12", "Dymek \(index) z 12"), for: 4) }
     }
 }

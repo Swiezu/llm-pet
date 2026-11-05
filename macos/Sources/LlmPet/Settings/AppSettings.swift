@@ -13,6 +13,7 @@ final class AppSettings {
     static let bubbleHeights: ClosedRange<Int> = 2...30
     static let expandedWidths: ClosedRange<Double> = 300...2000
     static let expandedHeights: ClosedRange<Int> = 5...120
+    static let bubbleCounts: ClosedRange<Int> = 0...10
     static let petScales: ClosedRange<Double> = 0.5...2
     static let speeds: ClosedRange<Double> = 0.25...3
     static let fastSpeeds: ClosedRange<Double> = 1...5
@@ -77,6 +78,14 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(expandedLines, forKey: "expandedLines") }
     }
 
+    var bubbleCount: Int {
+        didSet { UserDefaults.standard.set(bubbleCount, forKey: "bubbleCount") }
+    }
+
+    var newestFirst: Bool {
+        didSet { UserDefaults.standard.set(newestFirst, forKey: "newestFirst") }
+    }
+
     var petScale: Double {
         didSet { UserDefaults.standard.set(petScale, forKey: "petScale") }
     }
@@ -121,6 +130,9 @@ final class AppSettings {
         self.expandedWidth = Self.expandedWidths.contains(expandedWidth) ? expandedWidth : 800
         let expandedLines = UserDefaults.standard.integer(forKey: "expandedLines")
         self.expandedLines = Self.expandedHeights.contains(expandedLines) ? expandedLines : 40
+        let bubbleCount = UserDefaults.standard.object(forKey: "bubbleCount") as? Int ?? 2
+        self.bubbleCount = Self.bubbleCounts.contains(bubbleCount) ? bubbleCount : 2
+        newestFirst = UserDefaults.standard.object(forKey: "newestFirst") as? Bool ?? false
         let scale = UserDefaults.standard.double(forKey: "petScale")
         petScale = Self.petScales.contains(scale) ? scale : 1
         language = UserDefaults.standard.string(forKey: "language").flatMap(Language.init)

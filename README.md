@@ -39,7 +39,7 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 ## Features
 
 - **Speech bubbles with channels**: a main channel plus as many as you like, each with its own name and color; text types itself out, bubbles keep to the screen edges.
-- **Queue**: up to 2 bubbles stacked above the pet, the rest wait their turn and a "+n" badge shows how many.
+- **Queue**: bubbles stack above the pet (below it only when not even one fits above), 2 by default or as many as fit up to the edge of the screen (auto); the rest wait their turn, a "+n" badge shows how many, and scrolling over the bubbles browses the queue (hidden bubbles stop counting down). The newest or the oldest bubble sits next to the pet.
 - **Header**: an optional `title` (bold, top left) and `subtitle` (top right next to the X), e.g. the project and the branch; their colors and the "more" color are set per channel.
 - **Style**: `bubble` (default) or `left` / `right`, chat-like messages on one side, so a conversation reads left (incoming) and right (reply).
 - **Duration and links**: every bubble has an X in the corner, with a ring around it counting down until the bubble disappears; `seconds: 0` keeps it until you click X; an optional link (URL, deep link or file path) at the bottom right opens on click.
@@ -47,9 +47,9 @@ Every animation uses the same sprite on a shared pixel grid; props (portal, mug,
 - **Muting only by the user** (settings, menu bar or the right-click menu on the pet), so neither an LLM nor another app can get around it; Clawd plays a mute or unmute animation.
 - **34 animations** triggered from the menu, the API, an SDK or MCP; clicking the pet plays a random trick; animation speed, a fast mode and an animations off switch.
 - **Right-click menu**: right-clicking the pet opens the same menu as the menu bar paw.
-- **Drag and drop**: grab the pet and move it; on release it settles right where you left it, and it remembers the spot after hiding or quitting.
+- **Drag and drop**: grab the pet and move it, all the way up to the top edge of the screen; bubbles that no longer fit above it wait in the queue; on release it settles right where you left it, and it remembers the spot after hiding or quitting.
 - **English and Polish** UI, chosen on first launch.
-- **Settings**: language, channels, pet size (50-200%, animated live), bubble text size, max bubble width and height (collapsed and expanded), animation speed (normal and fast mode), frame rate separately on power and on battery (15, 30, 60, 120, 144… up to what the display supports, or VSync).
+- **Settings**: language, channels, pet size (50-200%, animated live), bubble text size, max bubble width and height (collapsed and expanded), bubbles on screen and their order, animation speed (normal and fast mode), frame rate separately on power and on battery (15, 30, 60, 120, 144… up to what the display supports, or VSync).
 - **Local HTTP API** on `127.0.0.1` only, token protected, with JS, Swift and shell SDKs and an MCP server.
 - **DEBUG menu** to preview animations by category, and test texts with combinable options (title, link, time, style, channel).
 
@@ -76,7 +76,7 @@ macos/build.sh --open        # release build into build/llm-pet.app, then launch
 | menu bar (paw) or right-click on the pet | what it does |
 |---|---|
 | Show / Hide pet | showing plays a random entrance (portal, pillar of light, poof, bird), hiding a random exit |
-| Settings… (⌘,) | language, channels (name, color, mute, delete), pet size, bubble text size, max bubble width and height (collapsed and expanded), animation speed, VSync, frame rate on power and on battery |
+| Settings… (⌘,) | language, channels (name, color, mute, delete), pet size, bubble text size, max bubble width and height (collapsed and expanded), bubbles on screen and their order, animation speed, VSync, frame rate on power and on battery |
 | Animations / Fast mode | switches: animations off (the pet just stands still), fast mode (the fast speed from the settings) |
 | Channels | one switch per channel: on = shown, off = muted |
 | DEBUG ANIMATION / TEXT | preview animations by category, and test texts with options (title, link, time, style, channel) |

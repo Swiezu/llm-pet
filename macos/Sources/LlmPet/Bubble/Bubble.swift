@@ -47,6 +47,7 @@ final class Bubble {
     var linkFont: NSFont { .monospacedSystemFont(ofSize: max(9, fontSize - 2), weight: .semibold) }
     var titleFont: NSFont { .monospacedSystemFont(ofSize: fontSize + 1, weight: .heavy) }
     var hasHeader: Bool { title != nil || subtitle != nil }
+    var scrolls: Bool { expanded && scroll != nil }
     var zoom: CGFloat { fontSize / Self.baseFont }
     var expandTitle: String { expanded ? Self.less : Self.more }
     var width: CGFloat { (folded.width + (unfolded.width - folded.width) * openness).rounded() }
@@ -59,6 +60,9 @@ final class Bubble {
     private enum Phase { case idle, typing, reading, erasing, hiding }
 
     @ObservationIgnored var offset: CGFloat?
+    @ObservationIgnored var onShow: (() -> Void)?
+    @ObservationIgnored private var started = false
+    @ObservationIgnored private var parked: Date?
     @ObservationIgnored private var phase = Phase.idle
     @ObservationIgnored private var phaseStart = Date.now
     @ObservationIgnored private var readTime: TimeInterval = 4
@@ -93,14 +97,46 @@ final class Bubble {
         let text = self.text ?? message
         count = 0
         shown = false
-        phase = .typing
-        phaseStart = .now.addingTimeInterval(0.18)
+        phase = .idle
         readTime = seconds ?? min(8, max(2.5, 2 + Double(text.count) / 25))
         forever = readTime.isInfinite
         progress = 0
+    }
+
+    func resume() {
+        if !started {
+            started = true
+            parked = nil
+            phase = .typing
+            phaseStart = .now.addingTimeInterval(0.18)
+            reveal()
+            onShow?()
+            return
+        }
+        guard let parked else { return }
+        self.parked = nil
+        let pause = Date.now.timeIntervalSince(parked)
+        phaseStart += pause
+        foldStart += pause
+        reveal()
+    }
+
+    func park() {
+        guard parked == nil else { return }
+        parked = .now
+        shown = false
+        offset = nil
+        window?.orderOut(nil)
+    }
+
+    func owns(_ window: NSWindow?) -> Bool {
+        window != nil && window === self.window
+    }
+
+    private func reveal() {
         Task {
             try? await Task.sleep(for: .milliseconds(40))
-            shown = true
+            if parked == nil { shown = true }
         }
     }
 

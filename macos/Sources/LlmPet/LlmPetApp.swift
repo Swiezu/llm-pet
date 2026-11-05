@@ -47,7 +47,7 @@ struct PetMenu: View {
             }
             Divider()
             Button(tr("Conversation (left and right)", "Rozmowa (lewo i prawo)")) { debug.conversation() }
-            Button(tr("5 bubbles at once (queue)", "5 dymków naraz (kolejka)")) { debug.queue() }
+            Button(tr("12 bubbles at once (queue)", "12 dymków naraz (kolejka)")) { debug.queue() }
             Section(tr("Options", "Opcje")) {
                 Toggle(tr("Title and subtitle", "Nagłówek i podtytuł"), isOn: $debug.header)
                 Toggle(tr("Random trick", "Losowy trik"), isOn: $debug.trick)

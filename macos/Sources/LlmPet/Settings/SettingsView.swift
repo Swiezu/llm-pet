@@ -93,6 +93,26 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
             Section {
+                LabeledContent(tr("Bubbles on screen", "Dymki na ekranie")) {
+                    HStack {
+                        Slider(value: Binding(get: { Double(settings.bubbleCount) }, set: { settings.bubbleCount = Int($0.rounded()) }), in: Double(AppSettings.bubbleCounts.lowerBound)...Double(AppSettings.bubbleCounts.upperBound), step: 1)
+                        Text(settings.bubbleCount == 0 ? "auto" : "\(settings.bubbleCount)")
+                            .monospacedDigit()
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                }
+                Picker(tr("Order from the pet", "Kolejność od peta"), selection: $settings.newestFirst) {
+                    Text(tr("Oldest first", "Od najstarszej")).tag(false)
+                    Text(tr("Newest first", "Od najnowszej")).tag(true)
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text(tr("Queue", "Kolejka"))
+            } footer: {
+                Text(tr("How many bubbles are shown before the rest waits in the queue; auto (0) stacks them up to the edge of the screen. Fewer are shown when there is no room, e.g. after moving the pet. Scroll over the bubbles to browse the queue; hidden bubbles stop counting down.", "Ile dymków widać, zanim reszta czeka w kolejce; auto (0) układa je aż do krawędzi ekranu. Gdy brakuje miejsca, np. po przeniesieniu peta, widać mniej. Przewiń nad dymkami, żeby przejrzeć kolejkę; ukryte dymki nie odliczają czasu."))
+                    .foregroundStyle(.secondary)
+            }
+            Section {
                 LabeledContent(tr("Animation speed", "Prędkość animacji")) {
                     HStack {
                         Slider(value: $settings.animationSpeed, in: AppSettings.speeds, step: 0.25)
