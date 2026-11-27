@@ -39,6 +39,9 @@ extension Pose {
         case .beamUp: beamUp(t: t, clock: clock)
         case .poof: poof(t: t, clock: clock)
         case .flyAway: flyAway(t: t, clock: clock)
+        case .stale: stale(t: t, clock: clock)
+        case .handoff: handoff(t: t, clock: clock)
+        case .limit: limit(t: t, clock: clock)
         }
     }
 

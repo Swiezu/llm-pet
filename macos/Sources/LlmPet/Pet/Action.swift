@@ -7,9 +7,10 @@ enum Action: String, CaseIterable, Identifiable {
     case smoke, chill, lunch, mute, unmute
     case beamDown = "beamdown", poofIn = "poofin", flyIn = "flyin"
     case portalOut = "portalout", beamUp = "beamup", poof, flyAway = "flyaway"
+    case stale, handoff, limit
 
     enum Category: String, CaseIterable, Identifiable {
-        case basics, entrance, exit, work, delivery, power, breaks, channels
+        case basics, entrance, exit, work, delivery, power, breaks, channels, messages
 
         var id: String { rawValue }
         var actions: [Action] { Action.allCases.filter { $0.category == self } }
@@ -24,6 +25,7 @@ enum Action: String, CaseIterable, Identifiable {
             case .power: ("Power", "Moc")
             case .breaks: ("Breaks", "Przerwy")
             case .channels: ("Channels", "Kanały")
+            case .messages: ("Messages", "Wiadomości")
             }
             return language == .pl ? pl : en
         }
@@ -45,6 +47,7 @@ enum Action: String, CaseIterable, Identifiable {
         case .workout, .kamehameha, .powerUp: .power
         case .coffee, .smoke, .chill, .lunch, .dillyDally: .breaks
         case .mute, .unmute: .channels
+        case .stale, .handoff, .limit: .messages
         }
     }
 
@@ -84,6 +87,9 @@ enum Action: String, CaseIterable, Identifiable {
         case .beamUp: ("Beam up", "Słup światła (wyjście)")
         case .poof: ("Poof", "Puf! (ulotnienie się)")
         case .flyAway: ("Fly away", "Odlot ptaszkiem")
+        case .stale: ("Old news", "Stare wieści")
+        case .handoff: ("Handoff", "Przekazanie pałeczki")
+        case .limit: ("Limit reached", "Limit osiągnięty")
         }
         return language == .pl ? pl : en
     }
@@ -123,6 +129,9 @@ enum Action: String, CaseIterable, Identifiable {
         case .beamUp: Beaming.upDuration
         case .poof: Poof.outDuration
         case .flyAway: Bird.awayDuration
+        case .stale: Messages.staleDuration
+        case .handoff: Messages.handoffDuration
+        case .limit: Messages.limitDuration
         }
     }
 }

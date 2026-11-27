@@ -11,7 +11,7 @@ Right-clicking the pet opens the same menu (`PetMenu`).
 | Animations | switch; off = no animations at all (API, menu and click are ignored, no teleport, no blinking), the pet stands still (`animationsEnabled`) |
 | Fast mode | switch; animations run at the fast speed from the settings (`fastMode`) |
 | Channels | a switch per channel, checked = shown, unchecked = muted (same as in the settings) |
-| DEBUG ANIMATION | plays the chosen animation, grouped by `Action.Category` (basics, entrances, exits, work, delivery, power, breaks, channels) |
+| DEBUG ANIMATION | plays the chosen animation, grouped by `Action.Category` (basics, entrances, exits, work, delivery, power, breaks, channels, messages) |
 | DEBUG TEXT | five test texts (`DebugTexts.Sample`: short, sentence, five lines, a word without spaces, long to expand), a conversation (left and right) and 12 bubbles at once (queue); every one of them uses the options below (`DebugBubble`, kept until quit): title and subtitle, a random trick, time (by length, 10 s, until closed), link (none, website, folder), style (bubble, chat left, chat right) and channel (checks color and muting) |
 | Quit (⌘Q) | plays a random exit first (`applicationShouldTerminate` answers `.terminateLater`, with a 10 s fallback); a hidden pet quits at once |
 
@@ -62,6 +62,9 @@ Speech bubble (separate window, keeps to screen edges, flips below the head when
 | `beamup` | exit: the pillar of light comes down, Claude raises its paws, glows white, stretches and dissolves into pixels up the beam, the beam narrows and leaves, a sparkle in the sky |
 | `poof` | exit: a wave, a crouch, a little jump and gone in a puff of smoke with sparkles |
 | `flyaway` | exit: "!", a jump, a puff of smoke, Claude turns into a little bird that flies off to the top right, a feather floats down |
+| `stale` | takes out a scroll and raises it, the paper drops to the ground and rolls far away along it; the far end turns yellow and specked, dust rises and a cobweb shows up; wide eyes and "!", Claude reels it back in, blows the cobweb and dust off, flings the scroll away and dusts off its paws |
+| `handoff` | holds out a briefcase, a teal Clawd walks in and both nod hello; the briefcase passes over, a heart, the teal Clawd turns, waves and walks off with it while Claude waves back; a sigh of relief |
+| `limit` | marches in place while the bar above its head fills from green to red; at 100% it freezes mid-step with "!" and the bar blinks; holds out a red stop sign on a pole, sweating and shaking its head; plants the sign, sits down and shrugs, then gets up |
 
 All animations use the same sprite on the same pixel grid (`Style.unit`); props (envelope, sheet, plane, bulb, portal, rocket, mug…) are pixel art in half sprite pixels (`Render/PixelArt.swift`, `Render/Props.swift`). The pet window is 360×320 pt to fit the portal, beams and flights.
 
