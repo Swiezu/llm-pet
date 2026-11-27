@@ -39,6 +39,7 @@ final class Pet {
     @ObservationIgnored private var scaleSpeed: CGFloat = 0
     @ObservationIgnored private var leaving: (() -> Void)?
     @ObservationIgnored private var display: NSScreen?
+    @ObservationIgnored private var headroom = (value: CGFloat(0), date: Date.now)
 
     var frameSize: CGSize { CGSize(width: Self.size.width * scale, height: Self.size.height * scale) }
     var isLeaving: Bool { leaving != nil }
@@ -310,6 +311,14 @@ final class Pet {
     private func placeBubble(_ screen: NSRect, floor: CGFloat, now: Date) {
         let bottom = y ?? floor
         let lift = action == .hop && !held && !falling ? Hop.lift(elapsed(now)) : 0
-        bubbles.place(on: screen, center: x + frameSize.width / 2, bottom: bottom, head: bottom + (58 + lift) * scale)
+        bubbles.place(on: screen, center: x + frameSize.width / 2, bottom: bottom, head: bottom + bubbleHead(lift, now) * scale)
+    }
+
+    private func bubbleHead(_ lift: CGFloat, _ now: Date) -> CGFloat {
+        let target = AppSettings.shared.animationsEnabled && !held ? action.headroom : 0
+        let dt = CGFloat(min(0.1, max(0, now.timeIntervalSince(headroom.date))))
+        let value = headroom.value + (target - headroom.value) * min(1, dt * 8)
+        headroom = (abs(target - value) < 0.5 ? target : value, now)
+        return max(58 + lift, headroom.value)
     }
 }
